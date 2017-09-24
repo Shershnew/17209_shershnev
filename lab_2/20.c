@@ -1,33 +1,39 @@
 #include<stdio.h>
-#define n 300
-void glhf(int* a, int b) {
-    int r[n];
-    int perenos;
-    int t;
-    for (int i = 0; i < n; ++i)
-        r[i] = 0;
-    for (int i = 0; i < b; ++i){
+
+#define N 300 //максимальное кол-во символов в числе
+
+void multiplication(int* operand1, int operand2) {
+    int result[N] = {0};
+    int perenos = 0;
+    int t = 0;
+    //умножаем по длинной арифметике
+    for (int i = 0; i < operand2; ++i) {
         perenos = 0;
-        for (int j = 0; j < n; ++j){
-            r[j] = (r[j] + a[j] + perenos);
-            perenos = r[j] / 10;
-            r[j] %= 10;
+        for (int j = 0; j < N; ++j) {
+            result[j] = (result[j] + operand1[j] + perenos);
+            perenos = result[j] / 10;
+            result[j] %= 10;
         }
     }
-    for (int i = 0; i < n; ++i)
-        a[i] = r[i];
+    //возвращаем число
+    for (int i = 0; i < N; ++i) {
+        operand1[i] = result[i];
+    }
 }
 
 int main() {
-    int a[n];
-    long long R = 0;
-    for (int i = 0; i < n; ++i)
-        a[i] = 0;
-    a[0] = 1;
-     for (char i = 1; i < 100; ++i)
-         glhf(a,i);
-     for (int i = 0; i < n; ++i)
-        R += a[i];
+
+    int arr[N] = {0};
+    int R = 0;
+    arr[0] = 1;
+    //находим факториал 100
+    for (char i = 1; i <= 100; ++i){
+         multiplication(arr, i);
+    }
+    //суммируем цифры
+    for (int i = 0; i < N; ++i){
+        R += arr[i];
+    }
     printf("\n%d\n",R);
     return 0;
 }
