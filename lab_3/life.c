@@ -11,17 +11,17 @@ void draw(char * map,int width, int height){
             if(*(map+j+(i * width)) == 0)
                 printf(" ");
             else
-            printf("%d",*(map+j+(i * width)));
+                printf("%d",*(map+j+(i * width)));
         }
-    printf("\n");
+        printf("\n");
     }
     printf("\n");
 }
 
 int check(int x,int y,int width,int height){
-    if(x < 0) x = width - 1;
-    if(x > width - 1) x = 0;
-    if(y < 0) y = height - 1;
+    if(x < 0)          x = width - 1;
+    if(x > width - 1)  x = 0;
+    if(y < 0)          y = height - 1;
     if(y > height - 1) y = 0;
     return x + (y * width);
 }
@@ -68,39 +68,83 @@ void turn(char *map, int width, int height,char **rule){
 
 int main(int argc, char **argv){
 
-    FILE *file;
+    FILE *fileRLE;
+    FILE *fileRULE;
     char *rule[219];
     int width;
     int height;
-    int x = 1 ,y = 1;
+    int x = 0 ,y = 0;
     int i,j;
 
-    file = fopen("rule.txt", "r");
-    fscanf(file,"#Size %d %d\n",&width, &height);
+    fileRULE = fopen("rule.txt", "r");
+    fileRLE = fopen("data.rle", "r");
 
+    char pointer;
+    do{
+        fscanf(fileRLE,"%c",&pointer);
+    }while(pointer != 'x');
+    fscanf(fileRLE," = %d, y = %d, rule = Langtons-Loops\n",&width, &height);
     char *map = (char *)calloc(width * height,1);
-    char str[width];
-    for (i = 0; i < 10; ++i)
+
+    int length = 0;
+    int eoff = 0;
+    do{
+        eoff =  fscanf(fileRLE,"%c",&pointer);
+        length++;
+    }while(pointer != '!' && eoff != -1);
+    length--;
+    char *str = (char *)malloc(length+1);
+    str[length] = '\0';
+    if(eoff == -1) fseek (fileRLE,length * -1,SEEK_END);
+    else     fseek (fileRLE,(length+1) * -1,SEEK_END);
+    for (i = 0; i < length; ++i)
     {
-        for (j = 0; j < width; ++j)
-        {
-            str[j] = 0;
-        }
-        fscanf(file,"%s",str);
-        for (j = 0; j < width; ++j)
-        {
-            if(str[j] != 0)
-            map[j+x+((i+y)*width)] = str[j] - '0';
-        }
+        fscanf(fileRLE,"%c",&str[i]);
+    }
+    int count = 0;
+    for (i = 0; i < length; ++i)
+    {
+        if(str[i] >= '0' && str[i] <= '9'){
+            count *= 10;
+            count += str[i] - '0';
+        } else
+            if(str[i] == '.'){
+                if(count == 0){
+                    x++;
+                    count = 0;
+                } else{
+                    x += count;
+                    count = 0;
+                }
+            } else
+                if(str[i] == '$'){
+                    y++; x = 0;
+                } else{
+                    if(count == 0){
+                        map[x+(y*width)] = str[i]-'A'+1;
+                        x++;
+                    }
+                    else{
+                        for (j = 0; j < count; ++j)
+                        {
+                            map[x+(y*width)] = str[i]-'A'+1;
+                            x++;
+                        }
+                        count = 0;
+                    }
+                }
     }
     for (i = 0; i < 219; ++i)
     {
         rule[i] = (char *)calloc(7,1);
-        fscanf(file,"%s",rule[i]);
+        fscanf(fileRULE,"%s",rule[i]);
     }
-    fclose(file);
+    fclose(fileRLE);
+    fclose(fileRULE);
     while(getch() != 'k'){
     system("cls");
+    printf("%d\n",length);
+    printf("%s\n",str);
     draw(map, width, height);
     turn(map,width,height,rule);
     }
