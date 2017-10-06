@@ -12,5 +12,7 @@
 # Evoloop (1999) ... there are more...
 # Ancestors: JvN29 (1948), Codd (1968)
 #
-x = 80, y = 50, rule = Langtons-Loops
-.8B$BAG.AD.ADB$B.6B.B$BGB4.BAB$BAB4.BAB$B.B4.BAB$BGB4.BAB$BA6BA5B$B.GA.GA.G5AB$.13B!
+x = 80, y = 30, rule = Langtons-Loops
+.8B$BAG.AD.ADB$B.6B.B$BGB4.BAB$BAB4.BAB$B.B4.BAB$BGB4.B
+AB$BA6BA5B$B.GA.GA.G5AB$
+.13B!

@@ -1,17 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <conio.h>
-#include <string.h>
+#include <Windows.h>
 
 void draw(char * map,int width, int height){
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     for (int i = 0; i < height; ++i)
     {
         for (int j = 0; j < width; ++j)
         {
-            if(*(map+j+(i * width)) == 0)
+            if(*(map+j+(i * width)) == 0){
+                SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 0));
                 printf(" ");
-            else
-                printf("%d",*(map+j+(i * width)));
+            }
+            else{
+                if(*(map+j+(i * width)) == 1) SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 9)); else
+                if(*(map+j+(i * width)) == 2) SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 4)); else
+                if(*(map+j+(i * width)) == 3) SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 3)); else
+                if(*(map+j+(i * width)) == 4) SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 2)); else
+                if(*(map+j+(i * width)) == 5) SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 5)); else
+                if(*(map+j+(i * width)) == 6) SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 6)); else
+                if(*(map+j+(i * width)) == 7) SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 7));
+                printf("*");
+            }
         }
         printf("\n");
     }
@@ -67,7 +78,6 @@ void turn(char *map, int width, int height,char **rule){
 }
 
 int main(int argc, char **argv){
-
     FILE *fileRLE;
     FILE *fileRULE;
     char *rule[219];
@@ -86,29 +96,16 @@ int main(int argc, char **argv){
     fscanf(fileRLE," = %d, y = %d, rule = Langtons-Loops\n",&width, &height);
     char *map = (char *)calloc(width * height,1);
 
-    int length = 0;
     int eoff = 0;
+    int count = 0;
     do{
         eoff =  fscanf(fileRLE,"%c",&pointer);
-        length++;
-    }while(pointer != '!' && eoff != -1);
-    length--;
-    char *str = (char *)malloc(length+1);
-    str[length] = '\0';
-    if(eoff == -1) fseek (fileRLE,length * -1,SEEK_END);
-    else     fseek (fileRLE,(length+1) * -1,SEEK_END);
-    for (i = 0; i < length; ++i)
-    {
-        fscanf(fileRLE,"%c",&str[i]);
-    }
-    int count = 0;
-    for (i = 0; i < length; ++i)
-    {
-        if(str[i] >= '0' && str[i] <= '9'){
+        if(pointer >= '0' && pointer <= '9'){
             count *= 10;
-            count += str[i] - '0';
-        } else
-            if(str[i] == '.'){
+            count += pointer - '0';
+        }
+        else
+            if(pointer == '.'){
                 if(count == 0){
                     x++;
                     count = 0;
@@ -116,24 +113,29 @@ int main(int argc, char **argv){
                     x += count;
                     count = 0;
                 }
-            } else
-                if(str[i] == '$'){
+            }
+            else
+                if(pointer == '$'){
                     y++; x = 0;
-                } else{
-                    if(count == 0){
-                        map[x+(y*width)] = str[i]-'A'+1;
-                        x++;
-                    }
-                    else{
-                        for (j = 0; j < count; ++j)
-                        {
-                            map[x+(y*width)] = str[i]-'A'+1;
-                            x++;
-                        }
-                        count = 0;
-                    }
                 }
-    }
+                else
+                    if(pointer == '\n' || pointer == '!'){
+                        continue;
+                    }
+                        else
+                            if(count == 0){
+                            map[x+(y*width)] = pointer-'A'+1;
+                            x++;
+                            }
+                            else{
+                                for (j = 0; j < count; ++j){
+                                    map[x+(y*width)] = pointer-'A'+1;
+                                    x++;
+                                }
+                                count = 0;
+                            }
+    }while(pointer != '!' && eoff != -1);
+
     for (i = 0; i < 219; ++i)
     {
         rule[i] = (char *)calloc(7,1);
@@ -141,12 +143,12 @@ int main(int argc, char **argv){
     }
     fclose(fileRLE);
     fclose(fileRULE);
+    printf("%d\n",'A'-1-54);
     while(getch() != 'k'){
     system("cls");
-    printf("%d\n",length);
-    printf("%s\n",str);
     draw(map, width, height);
     turn(map,width,height,rule);
     }
+    system("color 02");
     return 0;
 }
