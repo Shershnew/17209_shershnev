@@ -4,10 +4,11 @@
 #include <Windows.h>
 
 void draw(char * map,int width, int height){
+    int i,j;
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-    for (int i = 0; i < height; ++i)
+    for (i = 0; i < height; ++i)
     {
-        for (int j = 0; j < width; ++j)
+        for (j = 0; j < width; ++j)
         {
             if(*(map+j+(i * width)) == 0){
                 SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 0));
@@ -38,19 +39,19 @@ int check(int x,int y,int width,int height){
 }
 
 void turn(char *map, int width, int height,char **rule){
+    int i,j,k;
     char *map2 = calloc(width * height, 1);
-    char tec[7];
-    tec[6] = '\0';
-    for (int j = 0; j < height; ++j)
+    char tec[5];
+    for (j = 0; j < height; ++j)
     {
-        for (int i = 0; i < width; ++i)
+        for (i = 0; i < width; ++i)
         {
             tec[0] = map[check(i,j,width,height)];
             tec[1] = map[check(i,j-1,width,height)];
             tec[2] = map[check(i+1,j,width,height)];
             tec[3] = map[check(i,j+1,width,height)];
             tec[4] = map[check(i-1,j,width,height)];
-            for (int k = 0; k < 219; ++k)
+            for (k = 0; k < 219; ++k)
             {
                 if(*(rule[k]) - '0' == tec[0] && *(rule[k]+1) - '0' == tec[1] && *(rule[k]+2) - '0' == tec[2] && *(rule[k]+3) - '0' == tec[3] && *(rule[k]+4) - '0' == tec[4]){
                     map2[i+(j*width)] =*(rule[k]+5) - '0';
@@ -71,10 +72,11 @@ void turn(char *map, int width, int height,char **rule){
             }
         }
     }
-    for (int i = 0; i < width * height; ++i)
+    for (i = 0; i < width * height; ++i)
     {
         map[i] = map2[i];
     }
+    free(map2);
 }
 
 int main(int argc, char **argv){
@@ -87,19 +89,22 @@ int main(int argc, char **argv){
     int i,j;
 
     fileRULE = fopen("rule.txt", "r");
-    fileRLE = fopen("data.rle", "r");
-
+    fileRLE = fopen(argv[1], "r");
     char pointer;
-    do{
-        fscanf(fileRLE,"%c",&pointer);
-    }while(pointer != 'x');
-    fscanf(fileRLE," = %d, y = %d, rule = Langtons-Loops\n",&width, &height);
-    char *map = (char *)calloc(width * height,1);
-
-    int eoff = 0;
+    char *map;
     int count = 0;
     do{
-        eoff =  fscanf(fileRLE,"%c",&pointer);
+        if(fscanf(fileRLE,"%c",&pointer) == -1) break;
+        if(pointer == 'x'){
+            fscanf(fileRLE," = %d, y = %d, rule = Langtons-Loops\n",&width, &height);
+            map = (char *)calloc(width * height,1);
+            fscanf(fileRLE,"%c",&pointer);
+        }
+        if(pointer == '#'){
+            while(pointer != '\n'){
+                fscanf(fileRLE,"%c",&pointer);
+            }
+        }
         if(pointer >= '0' && pointer <= '9'){
             count *= 10;
             count += pointer - '0';
@@ -134,7 +139,7 @@ int main(int argc, char **argv){
                                 }
                                 count = 0;
                             }
-    }while(pointer != '!' && eoff != -1);
+    }while(pointer != '!');
 
     for (i = 0; i < 219; ++i)
     {
@@ -143,12 +148,16 @@ int main(int argc, char **argv){
     }
     fclose(fileRLE);
     fclose(fileRULE);
-    printf("%d\n",'A'-1-54);
     while(getch() != 'k'){
     system("cls");
     draw(map, width, height);
     turn(map,width,height,rule);
     }
+    for (i = 0; i < 219; ++i)
+    {
+        free(rule[i]);
+    }
+    free(map);
     system("color 02");
     return 0;
 }
