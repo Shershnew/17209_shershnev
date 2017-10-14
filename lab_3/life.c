@@ -38,9 +38,10 @@ int check(int x,int y,int width,int height){
     return x + (y * width);
 }
 
-void turn(char *map, int width, int height,char **rule){
-    int i,j,k;
+void turn(char *map, int width, int height,int *rule){
     char *map2 = calloc(width * height, 1);
+    int i,j,k;
+    int id = 0;
     char tec[5];
     for (j = 0; j < height; ++j)
     {
@@ -51,25 +52,13 @@ void turn(char *map, int width, int height,char **rule){
             tec[2] = map[check(i+1,j,width,height)];
             tec[3] = map[check(i,j+1,width,height)];
             tec[4] = map[check(i-1,j,width,height)];
-            for (k = 0; k < 219; ++k)
-            {
-                if(*(rule[k]) - '0' == tec[0] && *(rule[k]+1) - '0' == tec[1] && *(rule[k]+2) - '0' == tec[2] && *(rule[k]+3) - '0' == tec[3] && *(rule[k]+4) - '0' == tec[4]){
-                    map2[i+(j*width)] =*(rule[k]+5) - '0';
-                    break;
-                } else
-                if(*(rule[k]) - '0' == tec[0] && *(rule[k]+1) - '0' == tec[4] && *(rule[k]+2) - '0' == tec[1] && *(rule[k]+3) - '0' == tec[2] && *(rule[k]+4) - '0' == tec[3]){
-                    map2[i+(j*width)] =*(rule[k]+5) - '0';
-                    break;
-                } else
-                if(*(rule[k]) - '0' == tec[0] && *(rule[k]+1) - '0' == tec[3] && *(rule[k]+2) - '0' == tec[4] && *(rule[k]+3) - '0' == tec[1] && *(rule[k]+4) - '0' == tec[2]){
-                    map2[i+(j*width)] =*(rule[k]+5) - '0';
-                    break;
-                } else
-                if(*(rule[k]) - '0' == tec[0] && *(rule[k]+1) - '0' == tec[2] && *(rule[k]+2) - '0' == tec[3] && *(rule[k]+3) - '0' == tec[4] && *(rule[k]+4) - '0' == tec[1]){
-                    map2[i+(j*width)] =*(rule[k]+5) - '0';
-                    break;
-                }
-            }
+            id = 0;
+            id += (int)tec[0]; id *= 10;
+            id += (int)tec[1]; id *= 10;
+            id += (int)tec[2]; id *= 10;
+            id += (int)tec[3]; id *= 10;
+            id += (int)tec[4];
+            if(rule[id] != 0) map2[i+(j*width)] = rule[id]-1;
         }
     }
     for (i = 0; i < width * height; ++i)
@@ -79,25 +68,19 @@ void turn(char *map, int width, int height,char **rule){
     free(map2);
 }
 
-int main(int argc, char **argv){
+char* read_rle(int *width, int *height, char **argv){
     FILE *fileRLE;
-    FILE *fileRULE;
-    char *rule[219];
-    int width;
-    int height;
+    fileRLE = fopen(argv[1], "r");
     int x = 0 ,y = 0;
     int i,j;
-
-    fileRULE = fopen("rule.txt", "r");
-    fileRLE = fopen(argv[1], "r");
-    char pointer;
-    char *map;
     int count = 0;
+    char *map;
+    char pointer;
     do{
         if(fscanf(fileRLE,"%c",&pointer) == -1) break;
         if(pointer == 'x'){
-            fscanf(fileRLE," = %d, y = %d, rule = Langtons-Loops\n",&width, &height);
-            map = (char *)calloc(width * height,1);
+            fscanf(fileRLE," = %d, y = %d, rule = Langtons-Loops\n",width, height);
+            map = (char *)calloc(*width * *height,1);
             fscanf(fileRLE,"%c",&pointer);
         }
         if(pointer == '#'){
@@ -129,34 +112,77 @@ int main(int argc, char **argv){
                     }
                         else
                             if(count == 0){
-                            map[x+(y*width)] = pointer-'A'+1;
+                            map[x+(y * *width)] = pointer-'A'+1;
                             x++;
                             }
                             else{
                                 for (j = 0; j < count; ++j){
-                                    map[x+(y*width)] = pointer-'A'+1;
+                                    map[x+(y * *width)] = pointer-'A'+1;
                                     x++;
                                 }
                                 count = 0;
                             }
     }while(pointer != '!');
+    fclose(fileRLE);
+    return map;
+}
 
+int* read_rule(){
+    FILE *fileRULE = fopen("rule.txt", "r");
+    int* rule = (int*)calloc(100000, sizeof(int));
+    char* str = (char *)calloc(7,1);
+    int id = 0;
+    int i;
     for (i = 0; i < 219; ++i)
     {
-        rule[i] = (char *)calloc(7,1);
-        fscanf(fileRULE,"%s",rule[i]);
+        fscanf(fileRULE,"%s",str);
+        id = 0;
+        id += str[0]-'0'; id *= 10;
+        id += str[1]-'0'; id *= 10;
+        id += str[2]-'0'; id *= 10;
+        id += str[3]-'0'; id *= 10;
+        id += str[4]-'0';
+        rule[id] = str[5]-'0'+1;
+        id = 0;
+        id += str[0]-'0'; id *= 10;
+        id += str[4]-'0'; id *= 10;
+        id += str[1]-'0'; id *= 10;
+        id += str[2]-'0'; id *= 10;
+        id += str[3]-'0';
+        rule[id] = str[5]-'0'+1;
+        id = 0;
+        id += str[0]-'0'; id *= 10;
+        id += str[3]-'0'; id *= 10;
+        id += str[4]-'0'; id *= 10;
+        id += str[1]-'0'; id *= 10;
+        id += str[2]-'0';
+        rule[id] = str[5]-'0'+1;
+        id = 0;
+        id += str[0]-'0'; id *= 10;
+        id += str[2]-'0'; id *= 10;
+        id += str[3]-'0'; id *= 10;
+        id += str[4]-'0'; id *= 10;
+        id += str[1]-'0';
+        rule[id] = str[5]-'0'+1;
     }
-    fclose(fileRLE);
     fclose(fileRULE);
+    free(str);
+    return rule;
+}
+
+int main(int argc, char **argv){
+    int width;
+    int height;
+    int i,j;
+    int *rule = read_rule();
+    char *map = read_rle(&width,&height,argv);
+    
     while(getch() != 'k'){
     system("cls");
     draw(map, width, height);
     turn(map,width,height,rule);
     }
-    for (i = 0; i < 219; ++i)
-    {
-        free(rule[i]);
-    }
+    free(rule);
     free(map);
     system("color 02");
     return 0;
