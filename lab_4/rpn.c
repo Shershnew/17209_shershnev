@@ -24,8 +24,9 @@ enum Lexem_type{
 
 struct Lexem{
     enum Lexem_type type;
+    int priority;
     struct v{
-        int num_value;
+        double num_value;
         enum Operation op;
         enum Bracket br;
     } value;
@@ -34,6 +35,11 @@ struct Lexem{
 struct Lexem_list{
     struct Lexem lex;
     struct Lexem_list *next;
+};
+
+struct calc_answer{
+    int error;
+    double res;
 };
 
 void push(struct Lexem_list **stack, struct Lexem lex){
@@ -51,14 +57,29 @@ struct Lexem pop(struct Lexem_list **stack){
     return lex;
 }
 
+struct Lexem_list* reverse(struct Lexem_list * list){
+    struct Lexem_list *last = 0;
+    while(list != 0){
+        struct Lexem_list *p = list->next;
+        list->next = last;
+        last = list;
+        list = p;
+    }
+    return last;
+}
+
 struct Lexem_list* getLexemList(){
     struct Lexem_list* list = (struct Lexem_list*)malloc(sizeof(struct Lexem_list));
     struct Lexem lex;
-    lex.type = Last;
+    lex.type = First;
     list->lex = lex;
-    push(&list,lex);
+    list->next = 0;
     char tec = ' ';
-    int num = -1;
+    int bracket_count = 0;
+    int num_count = 0;
+    int op_count = 0;
+    int unar_op = 1;
+    double num = -1;
     while(tec != '!'){
         scanf("%c", &tec);
         if(isdigit(tec)){
@@ -69,172 +90,222 @@ struct Lexem_list* getLexemList(){
             if(num != -1){
                 lex.type = NUMBER;
                 lex.value.num_value = num;
-                push(&list,lex);
+                if(num_count < op_count){
+                    lex.value.num_value *= unar_op;
+                    push(&list,lex);
+                    op_count--;
+                }else{
+                    push(&list,lex);
+                }
                 num = -1;
+                num_count++;
             }
             if(tec == '+'){
                 lex.type = OPERATION;
                 lex.value.op = OP_plus;
-                push(&list,lex);
+                lex.priority = 3;
+                op_count++;
+                if(num_count < op_count){
+                    unar_op = 1;
+                }else{
+                    push(&list,lex);
+                }
             }else
             if(tec == '-'){
                 lex.type = OPERATION;
                 lex.value.op = OP_minus;
-                push(&list,lex);
+                lex.priority = 3;
+                op_count++;
+                if(num_count < op_count){
+                    unar_op = -1;
+                }else{
+                    push(&list,lex);
+                }
             }else
             if(tec == '*'){
                 lex.type = OPERATION;
                 lex.value.op = OP_multi;
+                lex.priority = 4;
                 push(&list,lex);
+                op_count++;
             }else
             if(tec == '/'){
                 lex.type = OPERATION;
                 lex.value.op = OP_div;
+                lex.priority = 4;
                 push(&list,lex);
+                op_count++;
             }else
             if(tec == '('){
+                bracket_count++;
                 lex.type = BRACKET;
                 lex.value.br = Bracket_open;
+                lex.priority = 2;
                 push(&list,lex);
             }else
             if(tec == ')'){
+                bracket_count--;
                 lex.type = BRACKET;
                 lex.value.br = Bracket_close;
+                lex.priority = 2;
                 push(&list,lex);
             }
         }
+        if(bracket_count < 0){
+            return 0;
+        }
     }
-    lex.type = First;
+    if(bracket_count != 0){
+        return 0;
+    }
+    lex.type = Last;
     push(&list,lex);
+    list = reverse(list);
     return list;
 }
 
 void printlist(struct Lexem_list * list){
     struct Lexem_list * pointer = list;
-    // pointer = pointer->next;
-    printf("\n");
-    while(pointer->lex.type != Last){
-        //printf("%d", pointer->lex.type);
-        if(pointer->lex.type == NUMBER) printf(" %d ", pointer->lex.value.num_value);
-        if(pointer->lex.type == OPERATION) printf("%d", pointer->lex.value.op);
+    while(pointer != 0){
+        if(pointer->lex.type == NUMBER) printf(" %f ", pointer->lex.value.num_value);
+        if(pointer->lex.type == OPERATION && pointer->lex.value.op == OP_plus) printf("+");
+        if(pointer->lex.type == OPERATION && pointer->lex.value.op == OP_minus) printf("-");
+        if(pointer->lex.type == OPERATION && pointer->lex.value.op == OP_multi) printf("*");
+        if(pointer->lex.type == OPERATION && pointer->lex.value.op == OP_div) printf("/");
+        if(pointer->lex.type == BRACKET && pointer->lex.value.br == Bracket_open) printf("(");
+        if(pointer->lex.type == BRACKET && pointer->lex.value.br == Bracket_close) printf(")");
+        if(pointer->lex.type == First) printf(" F ");
+        if(pointer->lex.type == Last) printf(" L ");
         pointer = pointer->next;
     }
-}
-
-int g1(struct Lexem_list* stack, struct Lexem l){
-    push(&stack,l);
-    return 1;
-}
-int g2(struct Lexem_list* stack,struct Lexem_list* rpn){
-    struct Lexem l = pop(&stack);
-    push(&rpn,l);
-    printf("g");
-    return 2;
-}
-int g3(struct Lexem_list* stack){
-    pop(&stack);
-    return 3;
 }
 
 struct Lexem_list * getRPN(struct Lexem_list* input){
     struct Lexem_list *stack = (struct Lexem_list*)malloc(sizeof(struct Lexem_list));
     struct Lexem_list *rpn = (struct Lexem_list*)malloc(sizeof(struct Lexem_list));
     stack->lex.type = Last;
-    rpn->lex.type = Last;
-    struct Lexem l, last_steck;
+    rpn->lex.type = First;
+    rpn->next = 0;
+    struct Lexem l, last_steck, forpop;
     last_steck.type = Last;
+    last_steck.priority = 1;
     l.type = First;
-    int status;
     while(l.type != Last){
         l = pop(&input);
+        printf("pop-%d\n",l.type);
         if(l.type == NUMBER){
-                push(&rpn,l);
-                continue;
+            push(&rpn,l);
+            printf("push-%d\n",l.type);
         }
-        status = -1;
-        while(!(status ==1 || status == 4 || status == 3)){
-            if(l.type == OPERATION && (l.value.op == OP_plus || l.value.op == OP_minus)){
-                if(last_steck.type == Last){
-                    printf("t1");
-                    push(&stack,l);
-                    status = 1;
-                    printf("-%d-", last_steck.type);
-                    last_steck = stack->lex;
-                    printf("-%d-", last_steck.type);
-                }else
-                if(last_steck.type == OPERATION){
-                    printf("k1");
-                    status = 2;
-                    push(&rpn,pop(&stack));
-                    last_steck = stack->lex;
-                }else
-                if(last_steck.type == BRACKET){
-                    printf("t2");
-                    push(&stack,l);
-                    status = 1;
-                    last_steck = stack->lex;
-                }
-            }else
-            if(l.type == OPERATION && (l.value.op == OP_multi || l.value.op == OP_div)){
-                if(last_steck.type == Last || last_steck.type == BRACKET || (last_steck.type == OPERATION && (last_steck.value.op == OP_plus || last_steck.value.op == OP_minus))){
-                    printf("t3");
-                    push(&stack,l);
-                    status = 1;
-                    last_steck = stack->lex;
-                }else
-                if(last_steck.type == OPERATION && (last_steck.value.op == OP_multi || last_steck.value.op == OP_div)){
-                    printf("k2");
-                    status = 2;
-                    push(&rpn,pop(&stack));
-                    last_steck = stack->lex;
-                }
-            }else
-            if(l.type == BRACKET && l.value.br == Bracket_open){
-                printf("t4");
-                push(&stack,l);
-                    status = 1;
+        if(l.type == OPERATION){
+            while(last_steck.priority >= l.priority){
+                push(&rpn,forpop = pop(&stack));
+                printf("push-%d\n",forpop.type);
+                printf("last-steck1-%d\n",last_steck.type);
                 last_steck = stack->lex;
-            }else
-            if(l.type == BRACKET && l.value.br == Bracket_close){
-                if(last_steck.type == OPERATION){
-                    printf("k3");
-                    status = 2;
-                    push(&rpn,pop(&stack));
-                    last_steck = stack->lex;
-                }
-                if(last_steck.type == BRACKET){
-                    printf("j1");
-                    status = 3;
-                    pop(&stack);
-                    last_steck = stack->lex;
-                }
-            }else
-            if(l.type == Last || last_steck.type == First){
-                printf("kek");
-                if(last_steck.type == OPERATION){
-                    printf("k4");
-                    status = 2;
-                    push(&rpn,pop(&stack));
-                    last_steck = stack->lex;
-                }
-                if(last_steck.type == Last){
-                    status = 4;
-                }
+                printf("last-steck2-%d\n",last_steck.type);
             }
-            printf("lol");
+            push(&stack,l);
+            last_steck = stack->lex;
+            printf("pushstak-%d\n",l.type);
         }
-        if (status == 4)
-        {
-            break;
+        if(l.type == BRACKET && l.value.br == Bracket_open){
+            push(&stack,l);
+            last_steck = stack->lex;
+        }
+        if(l.type == BRACKET && l.value.br == Bracket_close){
+            while(last_steck.type != BRACKET || last_steck.value.br != Bracket_open){
+                push(&rpn,pop(&stack));
+                printf("push-%d\n",l.type);
+                last_steck = stack->lex;
+            }
+            pop(&stack);
+            last_steck = stack->lex;
         }
     }
-return rpn;
+    printf("\n!-----------------------------!\n");
+    while(last_steck.type != Last){
+        push(&rpn,forpop = pop(&stack));
+        printf("push-%d\n",forpop.type);
+        last_steck = stack->lex;
+    }
+    rpn = reverse(rpn);
+    return rpn;
+}
+
+struct calc_answer calc(struct Lexem_list * rpn){
+    struct calc_answer c_a;
+    c_a.error = 0;
+    struct Lexem_list * pointer = rpn;
+    struct Lexem_list * stack = (struct Lexem_list*)malloc(sizeof(struct Lexem_list));
+    struct Lexem l;
+    struct Lexem left;
+    struct Lexem right;
+    stack->next = 0;
+    stack->lex.type = Last;
+    printf("\n!-----------------------------!\n");
+    while(pointer != 0){
+        l = pop(&pointer);
+        printf("pop-%d\n",l.type);
+        if(l.type == NUMBER){
+            printf("push-%d\n",l.value.num_value);
+            push(&stack,l);
+        }
+        if(l.type == OPERATION){
+            right = pop(&stack);
+            left = pop(&stack);
+            if(right.type != NUMBER || left.type != NUMBER){
+                c_a.error = 1;
+                return c_a;
+            }
+            if(l.value.op == OP_minus){
+                right.value.num_value = left.value.num_value - right.value.num_value;
+                printf("push-%d\n",right.value.num_value);
+                push(&stack,right);
+            }
+            if(l.value.op == OP_plus){
+                right.value.num_value = left.value.num_value + right.value.num_value;
+                printf("push-%d\n",right.value.num_value);
+                push(&stack,right);
+            }
+            if(l.value.op == OP_multi){
+                right.value.num_value = left.value.num_value * right.value.num_value;
+                printf("push-%d\n",right.value.num_value);
+                push(&stack,right);
+            }
+            if(l.value.op == OP_div){
+                if(right.value.num_value == 0.0){
+                    c_a.error = 2;
+                    return c_a;
+                }
+                right.value.num_value = left.value.num_value / right.value.num_value;
+                printf("push-%d\n",right.value.num_value);
+                push(&stack,right);
+            }
+        }
+    }
+    c_a.res = pop(&stack).value.num_value;
+    return c_a;
 }
 
 int main(){
     struct Lexem_list *input = getLexemList();
+    if(input == 0){
+        printf("incorrect bracket\n");
+        return 0;
+    }
     struct Lexem_list *rpn = getRPN(input); 
     printlist(rpn);
-    
+    struct calc_answer ans = calc(rpn);
+    if(ans.error == 0){
+        printf("ANSWER : %f\n", ans.res);
+    }
+    else{
+        switch(ans.error){
+            case 1: printf("no operator\n"); break;
+            case 2: printf("div on 0\n"); break;
+        }
+        return 0;
+    }
     return 0;
 }
