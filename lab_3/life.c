@@ -1,30 +1,36 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <conio.h>
+//#include <conio.h>
 #include <ctype.h>
-#include <Windows.h>
+//#include <Windows.h>
 
 void draw(char *map, int width, int height){
     int i = 0;
     int j = 0;
-    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    //HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     for (i = 0; i < height; ++i)
     {
         for (j = 0; j < width; ++j)
         {
             if(*(map+j+(i * width)) == 0){
-                SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 0));
+                //SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 0));
                 printf(" ");
             }
             else{
-                if(*(map+j+(i * width)) == 1) SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 9)); else
-                if(*(map+j+(i * width)) == 2) SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 4)); else
-                if(*(map+j+(i * width)) == 3) SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 3)); else
-                if(*(map+j+(i * width)) == 4) SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 2)); else
-                if(*(map+j+(i * width)) == 5) SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 5)); else
-                if(*(map+j+(i * width)) == 6) SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 6)); else
-                if(*(map+j+(i * width)) == 7) SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 7));
-                printf("*");
+                if(*(map+j+(i * width)) == 1) printf("1");//SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 9));
+                else
+                if(*(map+j+(i * width)) == 2) printf("2");//SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 4));
+                else
+                if(*(map+j+(i * width)) == 3) printf("3");//SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 3));
+                else
+                if(*(map+j+(i * width)) == 4) printf("4");//SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 2)); 
+            else
+                if(*(map+j+(i * width)) == 5) printf("5");//SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 5));
+                 else
+                if(*(map+j+(i * width)) == 6) printf("6");//SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 6));
+                 else
+                if(*(map+j+(i * width)) == 7) printf("7");//SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 7));
+                //printf("*");
             }
         }
         printf("\n");
@@ -215,13 +221,13 @@ int main(int argc, char **argv){
     int j = 0;
     int *rule = read_rule();
     char *map = read_rle(&width, &height, argv);
-    while(getch() != 'k'){
-        system("cls");
+    while(getchar() != 'k'){
+        system("clear");
         draw(map, width, height);
         turn(&map,width,height,rule);
     }
     free(rule);
     free(map);
-    system("color 02");
+    //system("color 02");
     return 0;
 }
