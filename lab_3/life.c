@@ -1,36 +1,61 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include <conio.h>
 #include <ctype.h>
-//#include <Windows.h>
+#ifdef _WIN32
+#include <conio.h>
+#include <Windows.h>
+#endif
 
 void draw(char *map, int width, int height){
     int i = 0;
     int j = 0;
-    //HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    #ifdef _WIN32
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    #endif
     for (i = 0; i < height; ++i)
     {
         for (j = 0; j < width; ++j)
         {
             if(*(map+j+(i * width)) == 0){
-                //SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 0));
+                #ifdef _WIN32
+                SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 0));
+                #endif
                 printf(" ");
             }
             else{
-                if(*(map+j+(i * width)) == 1) printf("1");//SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 9));
+                #ifdef _WIN32
+                if(*(map+j+(i * width)) == 1){ 
+                    SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 9));
+                }
                 else
-                if(*(map+j+(i * width)) == 2) printf("2");//SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 4));
+                if(*(map+j+(i * width)) == 2){
+                    SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 4));
+                }
                 else
-                if(*(map+j+(i * width)) == 3) printf("3");//SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 3));
+                if(*(map+j+(i * width)) == 3){
+                    SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 3));
+                }
                 else
-                if(*(map+j+(i * width)) == 4) printf("4");//SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 2)); 
-            else
-                if(*(map+j+(i * width)) == 5) printf("5");//SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 5));
-                 else
-                if(*(map+j+(i * width)) == 6) printf("6");//SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 6));
-                 else
-                if(*(map+j+(i * width)) == 7) printf("7");//SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 7));
-                //printf("*");
+                if(*(map+j+(i * width)) == 4){
+                    SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 2));
+                }
+                else
+                if(*(map+j+(i * width)) == 5){
+                    SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 5));
+                }
+                else
+                if(*(map+j+(i * width)) == 6){
+                 SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 6)); 
+                }
+                else
+                if(*(map+j+(i * width)) == 7){
+                 SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 7));
+                }
+                printf("*");
+                #else
+                printf("%d", *(map+j+(i * width)));
+                #endif
+                
             }
         }
         printf("\n");
@@ -155,8 +180,8 @@ char* read_rle(int *width, int *height, char **argv){
     return map;
 }
 
-int* read_rule(){
-    FILE *fileRULE = fopen("rule.txt", "r");
+int* read_rule(char **argv){
+    FILE *fileRULE = fopen(argv[2], "r");
     int* rule = (int*)calloc(100000, sizeof(int));
     char* str = (char *)calloc(7,1);
     int id = 0;
@@ -219,15 +244,21 @@ int main(int argc, char **argv){
     int height;
     int i = 0;
     int j = 0;
-    int *rule = read_rule();
+    int *rule = read_rule(argv);
     char *map = read_rle(&width, &height, argv);
     while(getchar() != 'k'){
-        system("clear");
+        #ifdef _WIN32
+        system("cls");
+        #else
+        system ("clear");//???????????????????????????????????????????????????
+        #endif
         draw(map, width, height);
         turn(&map,width,height,rule);
     }
     free(rule);
     free(map);
-    //system("color 02");
+    #ifdef _WIN32
+    system("color 0f");
+    #endif
     return 0;
 }
