@@ -152,10 +152,12 @@ struct Lexem_list* getLexemList(){
             }
         }
         if(bracket_count < 0){
+            free(list);
             return 0;
         }
     }
     if(bracket_count != 0){
+        free(list);
         return 0;
     }
     lex.type = Last;
