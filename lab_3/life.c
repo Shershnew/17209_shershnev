@@ -123,6 +123,7 @@ char* read_rle(int *width, int *height, char **argv){
     int i = 0;
     int j = 0;
     int count = 0;
+    char c = ' ';
     char *map;
     char pointer;
     do{
@@ -130,7 +131,10 @@ char* read_rle(int *width, int *height, char **argv){
             break;
         }
         if(pointer == 'x'){
-            fscanf(fileRLE," = %d, y = %d, rule = Langtons-Loops\n", width, height);
+            fscanf(fileRLE," = %d, y = %d", width, height);
+            while (c != '\n'){
+                fscanf(fileRLE,"%c",&c);
+            }
             map = (char *)calloc(*width * *height, 1);
             fscanf(fileRLE, "%c", &pointer);
         }
@@ -182,7 +186,7 @@ char* read_rle(int *width, int *height, char **argv){
 
 int* read_rule(char **argv){
     FILE *fileRULE = fopen(argv[2], "r");
-    int* rule = (int*)calloc(100000, sizeof(int));
+    int* rule = (int*)calloc(77778, sizeof(int));
     char* str = (char *)calloc(7,1);
     int id = 0;
     int i = 0;
@@ -250,7 +254,7 @@ int main(int argc, char **argv){
         #ifdef _WIN32
         system("cls");
         #else
-        system ("clear");//???????????????????????????????????????????????????
+        system ("clear");
         #endif
         draw(map, width, height);
         turn(&map,width,height,rule);
