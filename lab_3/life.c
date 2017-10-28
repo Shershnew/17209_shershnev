@@ -9,53 +9,59 @@
 void draw(char *map, int width, int height){
     int i = 0;
     int j = 0;
+    int r = 0;
     #ifdef _WIN32
+    int lastchar = 0;
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     #endif
     for (i = 0; i < height; ++i)
     {
         for (j = 0; j < width; ++j)
         {
-            if(*(map+j+(i * width)) == 0){
+            r = *(map+j+(i * width));
+            if(r == 0){
                 #ifdef _WIN32
-                SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 0));
+                if(lastchar != 1){
+                    SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 0));
+                    lastchar = 1;
+                }
                 #endif
                 printf(" ");
             }
             else{
                 #ifdef _WIN32
-                if(*(map+j+(i * width)) == 1){ 
+                lastchar = 0;
+                if(r == 1){ 
                     SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 9));
                 }
                 else
-                if(*(map+j+(i * width)) == 2){
+                if(r == 2){
                     SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 4));
                 }
                 else
-                if(*(map+j+(i * width)) == 3){
+                if(r == 3){
                     SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 3));
                 }
                 else
-                if(*(map+j+(i * width)) == 4){
+                if(r == 4){
                     SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 2));
                 }
                 else
-                if(*(map+j+(i * width)) == 5){
+                if(r == 5){
                     SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 5));
                 }
                 else
-                if(*(map+j+(i * width)) == 6){
-                 SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 6)); 
+                if(r == 6){
+                    SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 6)); 
                 }
                 else
-                if(*(map+j+(i * width)) == 7){
-                 SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 7));
+                if(r == 7){
+                    SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 7));
                 }
                 printf("*");
                 #else
-                printf("%d", *(map+j+(i * width)));
+                printf("%d", r);
                 #endif
-                
             }
         }
         printf("\n");
@@ -96,15 +102,10 @@ void turn(char **map, int width, int height, int *rule){
             tec[3] = (*map)[check(i,j+1,width,height)];
             tec[4] = (*map)[check(i-1,j,width,height)];
             id = 0;
-            id += (int)tec[0];
+            for (k = 0; k < 5; k++){
             id *= 10;
-            id += (int)tec[1];
-            id *= 10;
-            id += (int)tec[2];
-            id *= 10;
-            id += (int)tec[3];
-            id *= 10;
-            id += (int)tec[4];
+            id += (int)tec[k];
+            }
             if(rule[id] != 0){
                 map2[i+(j*width)] = rule[id]-1;
             }
@@ -118,6 +119,9 @@ void turn(char **map, int width, int height, int *rule){
 char* read_rle(int *width, int *height, char **argv){
     FILE *fileRLE;
     fileRLE = fopen(argv[1], "r");
+    if(NULL == fileRLE){
+        return 0;
+    }
     int x = 0;
     int y = 0;
     int i = 0;
@@ -186,57 +190,27 @@ char* read_rle(int *width, int *height, char **argv){
 
 int* read_rule(char **argv){
     FILE *fileRULE = fopen(argv[2], "r");
+    if(NULL == fileRULE){
+        return 0;
+    }
     int* rule = (int*)calloc(77778, sizeof(int));
     char* str = (char *)calloc(7,1);
     int id = 0;
     int i = 0;
+    int j = 0;
+    int k = 0;
     for (i = 0; i < 219; ++i)
     {
         fscanf(fileRULE,"%s",str);
-        id = 0;
-        id += str[0]-'0';
-        id *= 10;
-        id += str[1]-'0';
-        id *= 10;
-        id += str[2]-'0';
-        id *= 10;
-        id += str[3]-'0';
-        id *= 10;
-        id += str[4]-'0';
-        rule[id] = str[5]-'0'+1;
-        id = 0;
-        id += str[0]-'0';
-        id *= 10;
-        id += str[4]-'0';
-        id *= 10;
-        id += str[1]-'0';
-        id *= 10;
-        id += str[2]-'0';
-        id *= 10;
-        id += str[3]-'0';
-        rule[id] = str[5]-'0'+1;
-        id = 0;
-        id += str[0]-'0';
-        id *= 10;
-        id += str[3]-'0';
-        id *= 10;
-        id += str[4]-'0';
-        id *= 10;
-        id += str[1]-'0';
-        id *= 10;
-        id += str[2]-'0';
-        rule[id] = str[5]-'0'+1;
-        id = 0;
-        id += str[0]-'0';
-        id *= 10;
-        id += str[2]-'0';
-        id *= 10;
-        id += str[3]-'0';
-        id *= 10;
-        id += str[4]-'0';
-        id *= 10;
-        id += str[1]-'0';
-        rule[id] = str[5]-'0'+1;
+        for (j = 0; j < 4; j++){
+            id = 0;
+            id += str[0]-'0';
+            for (k = 0; k < 4; k++){
+                id *= 10;
+                id += str[(k+j)%4+1]-'0';
+            }
+            rule[id] = str[5]-'0'+1;
+        }
     }
     fclose(fileRULE);
     free(str);
@@ -248,21 +222,52 @@ int main(int argc, char **argv){
     int height;
     int i = 0;
     int j = 0;
+    if(argc < 3 || argc == 4){
+            printf("Need input files\n");
+            return 0;
+    }
     int *rule = read_rule(argv);
     char *map = read_rle(&width, &height, argv);
-    while(getchar() != 'k'){
-        #ifdef _WIN32
-        system("cls");
-        #else
-        system ("clear");
-        #endif
-        draw(map, width, height);
-        turn(&map,width,height,rule);
+    if(rule == 0 || map == 0){
+        printf("Error input filename\n");
+        return 0;
     }
-    free(rule);
-    free(map);
-    #ifdef _WIN32
-    system("color 0f");
-    #endif
+    if(argc == 3){
+        while(getchar() != 'k'){
+            #ifdef _WIN32
+            system("cls");
+            #else
+            system ("clear");
+            #endif
+            draw(map, width, height);
+            turn(&map,width,height,rule);
+        }
+        free(rule);
+        free(map);
+        #ifdef _WIN32
+        system("color 0f");
+        #endif
+    }else{
+        int count  = atoi(argv[4]);
+        FILE * fwrite = fopen(argv[3],"w");
+        if(count == 0 || fwrite == 0){
+            printf("Error input parametr\n");
+            return 0;
+        }
+        for(i = 0; i < count; i++){
+            turn(&map,width,height,rule);   
+        }
+        for(i = 0; i < height; i++){
+            for(j = 0; j < width; j++){
+                if(map[j+(i*width)] == 0){
+                    fprintf(fwrite, " ");
+                }else{
+                    fprintf(fwrite, "%c", map[j+(i*width)]+'0');
+                }
+            }
+            fprintf(fwrite, "\n");
+        }
+        fclose(fwrite);
+    }
     return 0;
 }
