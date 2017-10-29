@@ -268,6 +268,8 @@ int main(int argc, char **argv){
             fprintf(fwrite, "\n");
         }
         fclose(fwrite);
+        free(rule);
+        free(map);
     }
     return 0;
 }
