@@ -75,28 +75,45 @@ struct Lexem_list* getLexemList(){
     list->lex = lex;
     list->next = 0;
     char tec = ' ';
+    int i = 0;
     int bracket_count = 0;
     int num_count = 0;
     int op_count = 0;
     int unar_op = 1;
+    int dot = 0;
+    int count_after_dot = 0;
     double num = -1;
     while(tec != '!'){
         scanf("%c", &tec);
-        if(isdigit(tec)){
-            if(num == -1) num = 0;
-            num *= 10;
-            num += tec - '0';
-        } else{
+        if(isdigit(tec) || tec == '.'){
+            if(tec == '.'){
+                dot = 1;
+            } 
+            else{
+                if(num == -1){
+                    num = 0;
+                }
+                num *= 10;
+                num += tec - '0';
+                if(dot == 1){
+                    count_after_dot++;
+                }
+            }
+        }
+        else{
             if(num != -1){
+                for(i = 0; i < count_after_dot; i++){
+                    num /=10;
+                }
                 lex.type = NUMBER;
                 lex.value.num_value = num;
                 if(num_count < op_count){
                     lex.value.num_value *= unar_op;
-                    push(&list,lex);
                     op_count--;
-                }else{
-                    push(&list,lex);
                 }
+                push(&list,lex);
+                dot = 0;
+                count_after_dot = 0;
                 num = -1;
                 num_count++;
             }
@@ -263,8 +280,20 @@ struct calc_answer calc(struct Lexem_list * rpn){
             push(&stack,l);
         }
         if(l.type == OPERATION){
-            right = pop(&stack);
-            left = pop(&stack);
+            if(stack->lex.type != Last){
+                right = pop(&stack);
+            }
+            else{
+                c_a.error = 3;
+                return c_a;
+            }
+            if(stack->lex.type != Last){
+                left = pop(&stack);
+            }
+            else{
+                c_a.error = 3;
+                return c_a;
+            }
             if(right.type != NUMBER || left.type != NUMBER){
                 c_a.error = 1;
                 return c_a;
@@ -297,23 +326,26 @@ struct calc_answer calc(struct Lexem_list * rpn){
 }
 
 int main(){
-    struct Lexem_list *input = getLexemList();
-    if(input == 0){
-        printf("incorrect bracket\n");
-        return 0;
-    }
-    struct Lexem_list *rpn = getRPN(input); 
-    printlist(rpn);
-    struct calc_answer ans = calc(rpn);
-    if(ans.error == 0){
-        printf("ANSWER : %f\n", ans.res);
-    }
-    else{
-        switch(ans.error){
-            case 1: printf("no operator\n"); break;
-            case 2: printf("div on 0\n"); break;
+    while(1){
+        struct Lexem_list *input = getLexemList();
+        if(input == 0){
+            printf("incorrect bracket\n");
+            return 0;
         }
-        return 0;
+        struct Lexem_list *rpn = getRPN(input); 
+        printlist(rpn);
+        struct calc_answer ans = calc(rpn);
+        if(ans.error == 0){
+            printf("ANSWER : %f\n", ans.res);
+        }
+        else{
+            switch(ans.error){
+                case 1: printf("no operator\n"); break;
+                case 2: printf("div on 0\n"); break;
+                case 3: printf("ono\n"); break;
+            }
+            return 0;
+        }
     }
     return 0;
 }
