@@ -75,7 +75,6 @@ struct Lexem_list* getLexemList(){
     list->lex = lex;
     list->next = 0;
     char tec = ' ';
-    int i = 0;
     int bracket_count = 0;
     int num_count = 0;
     int op_count = 0;
@@ -100,6 +99,7 @@ struct Lexem_list* getLexemList(){
             }
         } else{
             if(num != -1){
+                int i = 0;
                 for(i = 0; i < count_after_dot; i++){
                     num /=10;
                 }
@@ -122,7 +122,7 @@ struct Lexem_list* getLexemList(){
                 op_count++;
                 if(num_count < op_count){
                     unar_op = 1;
-                }else{
+                } else{
                     push(&list,lex);
                 }
             }else if(tec == '-'){

@@ -32,7 +32,7 @@ void draw(char *map, int width, int height){
             else{
 #ifdef _WIN32
                 lastchar = 0;
-                if(1 == r){ 
+                if(1 == r){
                     SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 9));
                 }
                 else if(2 == r){
@@ -48,7 +48,7 @@ void draw(char *map, int width, int height){
                     SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 5));
                 }
                 else if(6 == r){
-                    SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 6)); 
+                    SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 6));
                 }
                 else if(7 == r){
                     SetConsoleTextAttribute(hConsole, (WORD) ((0 << 4) | 7));
@@ -168,17 +168,17 @@ char* read_rle(int *width, int *height, char **argv){
         else if(0 == count && (pointer >= 'A' && pointer <= 'G')){
             if(x+(y * *width) < *width * *height){
                 map[x+(y * *width)] = pointer-'A'+1;
-                x++;    
+                x++;
             }
             else{
-                return (char*)1;   
+                return (char*)1;
             }
         }
         else if(0 != count && (pointer >= 'A' && pointer <= 'G')){
             for (j = 0; j < count; ++j){
                 if(x+(y * *width) < *width * *height){
                     map[x+(y * *width)] = pointer-'A'+1;
-                    x++;    
+                    x++;
                 }
                 else{
                     return (char*)1;
@@ -282,11 +282,10 @@ int main(int argc, char **argv){
         }
         int i = 0;
         for(i = 0; i < count; i++){
-            turn(&map,width,height,rule);   
+            turn(&map,width,height,rule);
         }
         save_in_file(height, width, fwrite, map);
         system(argv[3]);
-        
     }
     free(rule);
     free(map);
