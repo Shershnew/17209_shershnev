@@ -58,7 +58,7 @@ struct tree * balance(struct tree * tr){
 	return tr;
 }
 
-struct tree * insert(struct tree * tr, char* k, int data_age, int data_height){
+struct tree * insert(struct tree * tr, const char* k, int data_age, int data_height){
 	if(!tr){
 		struct tree *r = (struct tree *)malloc(1*sizeof(struct tree));
 		r->left = 0;
@@ -102,7 +102,7 @@ struct tree * read(FILE *f, struct tree * tr){
 	return tr;
 }
 
-struct tree * find(struct tree * tr, char* key){
+struct tree * find(struct tree * tr, const char* key){
 	if(tr == 0){
 		return 0;
 	}
