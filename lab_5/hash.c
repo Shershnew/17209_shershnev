@@ -1,124 +1,134 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
-#define nameSize 50
-#define bufSize 98761
+#define NAMESIZE 50
+
+struct data_base{
+	struct data ** Htable;
+	long long buf_size;
+};
 
 struct data{
-	char name[nameSize];
+	char name[NAMESIZE];
 	int d1;
 	int d2;
 };
 
-void clear(char * str){
-	for (int i = 0; i < nameSize; ++i){
-		str[i] = 0;
-	}
-}
+void insert(struct data_base * db, struct data person);
 
-int strravn(char *str1, char *str2){
-	for (int i = 0; i < nameSize; ++i)
-	{
-		if(str1[i] != str2[i]){
-			return 1;
-		}
+unsigned int h1(char * str){
+	unsigned int hashAddress = 17;
+	for (int counter = 0; str[counter] != '\0'; counter++){
+		hashAddress = str[counter] + (hashAddress << 6) + (hashAddress << 16) - hashAddress;
 	}
-	return 0;
-}
-
-int h1(char * str){
-	int key = 0;
-	for(int i = 0; i < nameSize; ++i){
-		key += str[i];
-	}
-	return key % bufSize;
+	return hashAddress;
 }
 
 unsigned int h2(char * str){
-	unsigned int seed = 131313;
-	unsigned int hash = 0;
-	for (int i = 0; i < nameSize; ++i){
-		hash = (hash * seed) + str[i];
+	unsigned int hashAddress = 5381;
+	for (int counter = 0; str[counter] != '\0'; counter++){
+		hashAddress = ((hashAddress << 5) + hashAddress) + str[counter];
 	}
-	return hash % bufSize;
+	return hashAddress;
 }
 
-void insert(struct data ** ht, char * str, int d1, int d2){
+void resize(struct data_base ** db){
+	struct data_base * db_new = (struct data_base *)calloc(1, sizeof(struct data_base));
+	long long buf_size_new = (*db)->buf_size * 2;
+	db_new->Htable = (struct data **)calloc(buf_size_new, sizeof(struct data *));
+	db_new->buf_size = buf_size_new;
+	for (long long i = 0; i < (*db)->buf_size; ++i){
+		if((*db)->Htable[i] != 0){
+			insert(db_new, *((*db)->Htable[i]));
+		}
+		free((*db)->Htable[i]);
+	}
+	(*db)->Htable = db_new->Htable;
+	(*db)->buf_size = db_new->buf_size;
+	free(db_new);
+}
+
+void insert(struct data_base * db, struct data person){
 	int k = 0;
 	int key = 0;
 	while(1){
-		//printf("do\n");
-		key = (h2(str) + k * h1(str)) % bufSize;
-		//printf("posle %d\n",key);
-		if(ht[key] == 0){
-			printf("l9\n");
-			ht[key] = (struct data *)malloc(sizeof(struct data));
-			ht[key]->d1 = d1;
-			ht[key]->d2 = d2;
-			for (int i = 0; i < nameSize; ++i){
-				ht[key]->name[i] = str[i];
-			}
+		key = (h2(person.name) + k * h1(person.name)) % db->buf_size;
+		if(db->Htable[key] == 0){
+			db->Htable[key] = (struct data *)malloc(sizeof(struct data));
+			db->Htable[key]->d1 = person.d1;
+			db->Htable[key]->d2 = person.d2;
+			memcpy(db->Htable[key]->name, person.name, NAMESIZE);
 			break;
-		} else{
+		} else if(k < db->buf_size){
 			k++;
+		} else{
+			resize(&db);
+			insert(db, person);
 		}
 	}
 }
 
-void read(struct data ** ht, char **argv){
-	FILE * f = fopen(argv[1],"r");
-	int er = 0;
-	int d1 = 0;
-	int d2 = 0;
-	char str[nameSize];
-	clear(str);
+struct data_base * read(FILE * f){
+	struct data_base * db = (struct data_base *)calloc(1, sizeof(struct data_base));
+	if(NULL == f){
+		db->buf_size = 0;
+		return db;
+	}
+	long long buf_size_new = 1000;
+	db->Htable = (struct data **)calloc(buf_size_new, sizeof(struct data *));
+	db->buf_size = buf_size_new;
+	struct data person;
 	while(1){
-		er = fscanf(f, "%s %d %d", str, &d1, &d2);
-		//printf("l2\n");
+		memset(person.name, 0, NAMESIZE);
+		int er = fscanf(f, "%s %d %d", person.name, &person.d1, &person.d2);
 		if(er == -1){
 			break;
-			//printf("br\n");
 		}
-		insert(ht, str, d1, d2);
+		insert(db, person);
 	}
-	fclose(f);
+	return db;
 }
 
-int find(struct data ** ht, char * str){
+int find(struct data_base *db, char * str){
 	int k = 0;
 	int key = 0;
 	while(1){
-		key = (h2(str) + k * h1(str)) % bufSize;
-		printf("key = %d\n", key);
-		if(ht[key] != 0 && !strravn(str, ht[key]->name)){
+		key = (h2(str) + k * h1(str)) % db->buf_size;
+		if(db->Htable[key] != 0 && !strcmp(str, db->Htable[key]->name)){
 			return key;
 		} else {
 			k++;
-			if(k == bufSize){
+			if(k == db->buf_size){
 				break;
 			}
 		}
 	}
-	//printf("r0\n");
 	return 0;
 }
 
 int main(int argc, char ** argv){
-	struct data * Htable[bufSize];
-	for (int i = 0; i < bufSize; ++i){
-		Htable[i] = 0;
+	FILE * f = fopen(argv[1], "r");
+	clock_t start = clock();
+	struct data_base * db = read(f);
+	fclose(f);
+	if(db->buf_size == 0){
+		printf("error read\n");
+		return -1;
+	} else{
+		clock_t finish = clock();
+		printf("Reading from file passed in %f seconds\n", ((float)(finish - start)) / CLOCKS_PER_SEC );
 	}
-	read(Htable, argv);
-	char input[nameSize];
-	int key = 0;
+	char input_name[NAMESIZE];
 	while(1){
-		clear(input);
-		scanf("%s", input);
-		key = find(Htable, input);
+		memset(input_name, 0, NAMESIZE);
+		scanf("%s", input_name);
+		int key = find(db, input_name);
 		if(key){
-			printf("%d -- %d\n", Htable[key]->d1, Htable[key]->d2);
+			printf("%d -- %d\n", db->Htable[key]->d1, db->Htable[key]->d2);
 		} else{
-			printf("not found\n");
+			printf("Not found\n");
 		}
 	}
 	return 0;
