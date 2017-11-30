@@ -141,7 +141,7 @@ struct tree * balance(struct tree * tr){
 
 struct returninsert insert(struct tree * tr, const char * k, struct student st){
 	struct returninsert ret;
-	struct returninsert back;
+	struct returninsert answ_from_insert;
 	if(!tr){
 		struct tree *r = (struct tree *)malloc(1 * sizeof(struct tree));
 		r->left = 0;
@@ -155,9 +155,9 @@ struct returninsert insert(struct tree * tr, const char * k, struct student st){
 		return ret;
 	}
 	if(strcmp(tr->key, k) > 0){
-		back = insert(tr->left, k, st);
-		tr->left = back.tr;
-		ret.stat = back.stat;
+		answ_from_insert = insert(tr->left, k, st);
+		tr->left = answ_from_insert.tr;
+		ret.stat = answ_from_insert.stat;
 		ret.tr = tr;
 		if(1 == ret.stat){
 			return ret;
@@ -168,9 +168,9 @@ struct returninsert insert(struct tree * tr, const char * k, struct student st){
 			ret.stat = 1;
 		}
 	} else{
-		back = insert(tr->right, k, st);
-		tr->right = back.tr;
-		ret.stat = back.stat;
+		answ_from_insert = insert(tr->right, k, st);
+		tr->right = answ_from_insert.tr;
+		ret.stat = answ_from_insert.stat;
 		ret.tr = tr;
 		if(1 == ret.stat){
 			return ret;
@@ -199,17 +199,6 @@ struct tree * find(struct tree * tr, const char * key){
 	return 0;
 }
 
-void printtree(int deep, struct tree * p){
-	if(p){
-		printtree(deep + 1, p->left);
-		for(int i = 0; i < deep; i++)
-			printf("|--");
-		printf(">%s %d",p->key,p->height_delta);
-		printf("\n");
-		printtree(deep + 1, p->right);
-	}
-}
-
 struct tree * read(FILE * f, struct tree * tr){
 	if(NULL == f){
 		return 0;
@@ -228,15 +217,6 @@ struct tree * read(FILE * f, struct tree * tr){
 		}
 	}
 	return tr;
-}
-
-void printheight(struct tree * tr, int a){
-	if(!tr){
-		printf("%d ", a);
-		return;
-	}
-	printheight(tr->left, a+1);
-	printheight(tr->right, a+1);
 }
 
 int main(int argc, char ** argv){
