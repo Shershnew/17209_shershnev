@@ -4,6 +4,7 @@
 #include <time.h>
 
 #define NAMESIZE 50
+#define BUFSIZE 100000
 
 struct data_base{
 	struct data ** Htable;
@@ -76,14 +77,13 @@ struct data_base * read(FILE * f){
 		db->buf_size = 0;
 		return db;
 	}
-	long long buf_size_new = 1000;
-	db->Htable = (struct data **)calloc(buf_size_new, sizeof(struct data *));
-	db->buf_size = buf_size_new;
+	db->buf_size = BUFSIZE;
+	db->Htable = (struct data **)calloc(db->buf_size, sizeof(struct data *));
 	struct data person;
 	while(1){
 		memset(person.name, 0, NAMESIZE);
 		int er = fscanf(f, "%s %d %d", person.name, &person.d1, &person.d2);
-		if(er == -1){
+		if(er != 3){
 			break;
 		}
 		insert(db, person);
@@ -98,7 +98,7 @@ int find(struct data_base *db, char * str){
 		key = (h2(str) + k * h1(str)) % db->buf_size;
 		if(db->Htable[key] != 0 && !strcmp(str, db->Htable[key]->name)){
 			return key;
-		} else {
+		} else{
 			k++;
 			if(k == db->buf_size){
 				break;
@@ -118,7 +118,7 @@ int main(int argc, char ** argv){
 		return -1;
 	} else{
 		clock_t finish = clock();
-		printf("Reading from file passed in %f seconds\n", ((float)(finish - start)) / CLOCKS_PER_SEC );
+		printf("Read %f seconds\n", ((float)(finish - start)) / CLOCKS_PER_SEC);
 	}
 	char input_name[NAMESIZE];
 	while(1){
