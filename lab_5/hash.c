@@ -4,7 +4,7 @@
 #include <time.h>
 
 #define NAMESIZE 50
-#define BUFSIZE 3
+#define BUFSIZE 3000000
 
 struct data_base{
 	struct data ** Htable;
@@ -45,13 +45,11 @@ void insert_for_resize(struct data_base * db, struct data * person){
 			break;
 		} else {
 			k++;
-		} 
+		}
 	}
 }
 
-static int c = 0;
 void resize(struct data_base ** db){
-	printf("resize = %d\n", c++);
 	struct data_base * db_new = (struct data_base *)calloc(1, sizeof(struct data_base));
 	long long buf_size_new = (*db)->buf_size * 2;
 	db_new->Htable = (struct data **)calloc(buf_size_new, sizeof(struct data *));
@@ -70,7 +68,7 @@ void insert(struct data_base * db, struct data person){
 	int k = 0;
 	int key = 0;
 
-	if (db->size >= db->buf_size/2) {
+	if (db->size >= db->buf_size/2){
 		resize(&db);
 	}
 
@@ -85,7 +83,7 @@ void insert(struct data_base * db, struct data person){
 			break;
 		} else {
 			k++;
-		} 
+		}
 	}
 }
 
