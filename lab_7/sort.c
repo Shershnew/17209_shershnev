@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define size_for_qsort 1000
+#define size_for_qsort 100000
 
 struct file_list{
 	char name[12];
@@ -49,20 +49,21 @@ int getff(FILE * f, void * a){
 
 void putff(FILE * f, void * a){
 	double * r = (double *)a;
-	// fprintf(f, "%lf ", *r);
+	fprintf(f, "%lf ", *r);
 }
 
 void qsortt(void * arr, int l, int r,
  void (*swap)(void * arrr, int a, int b),
- int (*cmp)(void * arrr, int a, int b)){
+ int (*cmp)(void * arrr, int a, int b),
+ int typesort){
 	int i = l;
 	int j = r;
 	if(l < r){
 		while(i <= j){
-			while(-1 == cmp(arr, i, l)){
+			while(-1 * typesort == cmp(arr, i, l)){
 				i++;
 			}
-			while(1 == cmp(arr, j, l)){
+			while(1 * typesort == cmp(arr, j, l)){
 				j--;
 			}
 			if(i <= j){
@@ -72,11 +73,11 @@ void qsortt(void * arr, int l, int r,
 			}
 		}
 	}else return;
-	qsortt(arr, l, i-1, swap, cmp);
-	qsortt(arr, i, r, swap, cmp);
+	qsortt(arr, l, i-1, swap, cmp, typesort);
+	qsortt(arr, i, r, swap, cmp, typesort);
 }
 
-void read(struct file_list ** head, FILE * f, int count){
+void read(struct file_list ** head, FILE * f, int count, int typesort){
 	*head = (struct file_list *)malloc(sizeof(struct file_list));
 	(*head)->next = 0;
 	int last = 0;
@@ -93,7 +94,7 @@ void read(struct file_list ** head, FILE * f, int count){
 	if(!stop_read){
 		last = size_for_qsort - 1;
 	}
-	qsortt(arr, 0, last, &swap, &cmp);
+	qsortt(arr, 0, last, &swap, &cmp, typesort);
 	for (int j = 0; j < 8; ++j){
 		(*head)->name[j] = "sortfile"[j];
 	}
@@ -110,14 +111,15 @@ void read(struct file_list ** head, FILE * f, int count){
 	fclose(fpr);
 	free(arr);
 	if(!stop_read){
-		read(&((*head)->next), f, count + 1);
+		read(&((*head)->next), f, count + 1, typesort);
 	}
 }
 
 void merge(struct file_list ** head, int count,
 	int (*cmp2)(void * aa, void * bb),
 	int (*getff)(FILE * f, void * a),
-	void (*putff)(FILE * f, void * a)){
+	void (*putff)(FILE * f, void * a),
+	int typesort){
 
 	if(0 == *head){
 		return;
@@ -127,7 +129,6 @@ void merge(struct file_list ** head, int count,
 	}
 	struct file_list * p1 = *head;
 	struct file_list * p2 = (*head)->next;
-	// printf("%d\n", count);
 	FILE * f1 = fopen(p1->name, "r");
 	FILE * f2 = fopen(p2->name, "r");
 	char rezname[12];
@@ -142,32 +143,24 @@ void merge(struct file_list ** head, int count,
 	void * b = malloc(sizeof(double));
 	int err1 = 0;
 	int err2 = 0;
-	// printf("+2+2+2+2\n");
-	err1 = getff(f1, a);//fscanf(f1, "%d", &a);
-	// printf("+2+2+2+2444444444444444444447777777777777777777\n");
-	err2 = getff(f2, b);//fscanf(f2, "%d", &b);
-	// printf("+2+2+2+244444444444444444444\n");
+	err1 = getff(f1, a);
+	err2 = getff(f2, b);
 	while(err1 == 0 && err2 == 0){
-		// printf("+2+2+2+23333333333333333333\n");
-		if(-1 == cmp2(a, b)){
-			// fprintf(result, "%d ", a);
+		if(-1 * typesort == cmp2(a, b)){
 			putff(result, a);
-			err1 = getff(f1, a);//fscanf(f1, "%d", &a);
+			err1 = getff(f1, a);
 		} else{
-			// fprintf(result, "%d ", b);
 			putff(result, b);
-			err2 = getff(f2, b);//fscanf(f2, "%d", &b);
+			err2 = getff(f2, b);
 		}
 	}
 	while(0 == err1){
-		// fprintf(result, "%d ", a);
 		putff(result, a);
-		err1 = getff(f1, a);//fscanf(f1, "%d", &a);
+		err1 = getff(f1, a);
 	}
 	while(0 == err2){
-		// fprintf(result, "%d ", b);
 		putff(result, b);
-		err2 = getff(f2, b);//fscanf(f2, "%d", &b);
+		err2 = getff(f2, b);
 	}
 	fclose(f1);
 	fclose(f2);
@@ -177,17 +170,15 @@ void merge(struct file_list ** head, int count,
 	memcpy(p1->name, rezname, 12);
 	p1->next = p2->next;
 	free(p2);
-	// printf("%s %s\n", (*head)->name, (*head)->next->name);
-	merge(&((*head)->next), count + 1, cmp2, getff, putff);
+	merge(&((*head)->next), count + 1, cmp2, getff, putff, typesort);
 }
 
-void merge_sortt(FILE * f){
+void merge_sortt(FILE * f, int typesort){
 	struct file_list * file_base = 0;
-	read(&file_base, f, 0);
-	// printf("++++++++++++++++++++++=\n");
+	read(&file_base, f, 0, typesort);
 	int k = 0;
 	while(file_base->next != 0){
-		merge(&file_base, k, &cmp2, &getff, &putff);
+		merge(&file_base, k, &cmp2, &getff, &putff, typesort);
 		k += 1000;
 	}
 }
@@ -198,8 +189,12 @@ int main(int argc, char **argv){
 		printf("error read\n");
 		return -1;
 	}
+	int typesort = 1;
+	if(argv[2][0] == '>'){
+		typesort = -1;
+	}
 	clock_t start = clock();
-	merge_sortt(f);
+	merge_sortt(f, typesort);
 	clock_t finish = clock();
 	printf("Read %f seconds\n", ((float)(finish - start)) / CLOCKS_PER_SEC);
 	return 0;
