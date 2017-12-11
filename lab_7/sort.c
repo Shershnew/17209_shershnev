@@ -3,67 +3,25 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define size_for_qsort 100000
+#define size_for_qsort 14656
 
 struct file_list{
 	char name[12];
 	struct file_list * next;
 };
 
-void swap(void * arrr, int a, int b){
-	double * arr = (double *)arrr;
-	double c = arr[a];
-	arr[a] = arr[b];
-	arr[b] = c;
-}
-
-int cmp(void * arrr, int a, int b){
-	double *arr = (double *)arrr;
-	if(arr[a] > arr[b])
-		return 1;
-	else if(arr[a] < arr[b])
-		return -1;
-	else
-		return 0;
-}
-
-int cmp2(void * aa, void * bb){
-	double * a = (double *)aa;
-	double * b = (double *)bb;
-	if(*a > *b)
-		return 1;
-	else if(*a < *b)
-		return -1;
-	else
-		return 0;
-}
-
-int getff(FILE * f, void * a){
-	int err = 0;
-	err = fscanf(f, "%lf", (double *)a);
-	if(-1 != err)
-		return 0;
-	else
-		return 1;
-}
-
-void putff(FILE * f, void * a){
-	double * r = (double *)a;
-	fprintf(f, "%lf ", *r);
-}
-
 void qsortt(void * arr, int l, int r,
  void (*swap)(void * arrr, int a, int b),
- int (*cmp)(void * arrr, int a, int b),
- int typesort){
+ int (*cmp)(void * aa, void * bb),
+ int typesort, int size_type){
 	int i = l;
 	int j = r;
 	if(l < r){
 		while(i <= j){
-			while(-1 * typesort == cmp(arr, i, l)){
+			while(-1 * typesort == cmp((char *)arr + i * size_type, (char *)arr + l * size_type)){
 				i++;
 			}
-			while(1 * typesort == cmp(arr, j, l)){
+			while(1 * typesort == cmp((char *)arr + j * size_type, (char *)arr + l * size_type)){
 				j--;
 			}
 			if(i <= j){
@@ -73,19 +31,26 @@ void qsortt(void * arr, int l, int r,
 			}
 		}
 	}else return;
-	qsortt(arr, l, i-1, swap, cmp, typesort);
-	qsortt(arr, i, r, swap, cmp, typesort);
+	qsortt(arr, l, i-1, swap, cmp, typesort, size_type);
+	qsortt(arr, i, r, swap, cmp, typesort, size_type);
 }
 
-void read(struct file_list ** head, FILE * f, int count, int typesort){
+int read(struct file_list ** head, FILE * f, int count, int typesort, int size_type,
+ void (*swap)(void * arrr, int a, int b),
+ int (*cmp)(void * aa, void * bb),
+ void (*getff)(FILE * f, void * arr_r, int * arr_err, int num_err),
+ void (*putff)(FILE * f, void * a)){
+
 	*head = (struct file_list *)malloc(sizeof(struct file_list));
 	(*head)->next = 0;
 	int last = 0;
-	double * arr = (double *)malloc(size_for_qsort * sizeof(double));
+	void * arr = malloc(size_for_qsort * size_type);
 	int i = 0;
 	int stop_read = 0;
+	int err_r = 0;
 	for (i = 0; i < size_for_qsort; ++i){
-		if(-1 == fscanf(f, "%lf", arr + i)){
+		getff(f, (char *)arr + i * size_type, &err_r, 0);
+		if(-1 == err_r){
 			last = i-1;
 			stop_read = 1;
 			break;
@@ -94,7 +59,7 @@ void read(struct file_list ** head, FILE * f, int count, int typesort){
 	if(!stop_read){
 		last = size_for_qsort - 1;
 	}
-	qsortt(arr, 0, last, &swap, &cmp, typesort);
+	qsortt(arr, 0, last, swap, cmp, typesort, size_type);
 	for (int j = 0; j < 8; ++j){
 		(*head)->name[j] = "sortfile"[j];
 	}
@@ -106,81 +71,118 @@ void read(struct file_list ** head, FILE * f, int count, int typesort){
 	(*head)->name[11] = '\0';
 	FILE * fpr = fopen((*head)->name, "w");
 	for (i = 0; i <= last; ++i){
-		fprintf(fpr, "%lf ", arr[i]);
+		putff(fpr, (char *)arr + i * size_type);
 	}
 	fclose(fpr);
 	free(arr);
+	int countt = 1;
 	if(!stop_read){
-		read(&((*head)->next), f, count + 1, typesort);
+		countt += read(&((*head)->next), f, count + 1, typesort, size_type, swap, cmp, getff, putff);
 	}
+	return countt;
 }
 
-void merge(struct file_list ** head, int count,
-	int (*cmp2)(void * aa, void * bb),
-	int (*getff)(FILE * f, void * a),
-	void (*putff)(FILE * f, void * a),
-	int typesort){
+int find_el_and_write(void * arr_r, int * arr_err, FILE ** arr_f, FILE * result_file, int size_type, int file_count, int typesort,
+ int (*cmp)(void * aa, void * bb),
+ void (*getff)(FILE * f, void * arr_r, int * arr_err, int num_err),
+ void (*putff)(FILE * f, void * a)){
 
-	if(0 == *head){
-		return;
-	}
-	if(0 == (*head)->next){
-		return;
-	}
-	struct file_list * p1 = *head;
-	struct file_list * p2 = (*head)->next;
-	FILE * f1 = fopen(p1->name, "r");
-	FILE * f2 = fopen(p2->name, "r");
-	char rezname[12];
-	memcpy(rezname, p1->name, 12);
-	rezname[4] = '0'+count%10;
-	rezname[3] = '0'+(count/10)%10;
-	rezname[2] = '0'+(count/100)%10;
-	rezname[1] = '0'+(count/1000)%10;
-	rezname[0] = '0'+(count/10000)%10;
-	FILE * result = fopen(rezname, "w");
-	void * a = malloc(sizeof(double));
-	void * b = malloc(sizeof(double));
-	int err1 = 0;
-	int err2 = 0;
-	err1 = getff(f1, a);
-	err2 = getff(f2, b);
-	while(err1 == 0 && err2 == 0){
-		if(-1 * typesort == cmp2(a, b)){
-			putff(result, a);
-			err1 = getff(f1, a);
-		} else{
-			putff(result, b);
-			err2 = getff(f2, b);
+	int err_r = 0;
+	void * min_or_max = calloc(size_type, 1);
+	int first = 0;
+	int num_el_for_push = -1;
+	for (first = 0; first < file_count; ++first){
+		if(arr_err[first] == 0){
+			memcpy(min_or_max, (char *)arr_r + first * size_type, size_type);
+			num_el_for_push = first;
+			break;
 		}
 	}
-	while(0 == err1){
-		putff(result, a);
-		err1 = getff(f1, a);
+	for (int i = first + 1; i < file_count; ++i){
+		if(arr_err[i] == 0){
+			if(cmp(min_or_max, (char *)arr_r + i * size_type) == typesort){
+				memcpy(min_or_max, (char *)arr_r + i * size_type, size_type);
+				num_el_for_push = i;
+			}
+		}
 	}
-	while(0 == err2){
-		putff(result, b);
-		err2 = getff(f2, b);
+	if(-1 == num_el_for_push){
+		return -1;
 	}
-	fclose(f1);
-	fclose(f2);
-	fclose(result);
-	remove(p1->name);
-	remove(p2->name);
-	memcpy(p1->name, rezname, 12);
-	p1->next = p2->next;
-	free(p2);
-	merge(&((*head)->next), count + 1, cmp2, getff, putff, typesort);
+	putff(result_file, min_or_max);
+	getff(arr_f[num_el_for_push], (char *)arr_r + num_el_for_push * size_type, arr_err, num_el_for_push);
+	free(min_or_max);
+	return 0;
 }
 
-void merge_sortt(FILE * f, int typesort){
+void merge_sortt(FILE * f, int typesort, int size_type,
+ void (*swap)(void * arrr, int a, int b),
+ int (*cmp)(void * aa, void * bb),
+ void (*getff)(FILE * f, void * arr_r, int * arr_err, int num_err),
+ void (*putff)(FILE * f, void * a)){
+
 	struct file_list * file_base = 0;
-	read(&file_base, f, 0, typesort);
-	int k = 0;
-	while(file_base->next != 0){
-		merge(&file_base, k, &cmp2, &getff, &putff, typesort);
-		k += 1000;
+	int file_count = read(&file_base, f, 0, typesort, size_type, swap, cmp, getff, putff);
+	FILE * result_file = fopen("result.txt", "w");
+	struct file_list * pointer = file_base;
+	void * arr_r = malloc(file_count * size_type);
+	int * arr_err = (int *)calloc(file_count, sizeof(int));
+	FILE ** arr_f = (FILE **)malloc(file_count * sizeof(FILE *));
+	int i = 0;
+	while(pointer != 0){
+		arr_f[i] = fopen(pointer->name, "r");
+		getff(arr_f[i], (char *)arr_r + i * size_type, arr_err, i);
+		i++;
+		pointer = pointer->next;
 	}
+	int find_stat = 0;
+	while(0 == find_stat){
+		find_stat = find_el_and_write(arr_r, arr_err, arr_f, result_file, size_type, file_count, typesort, cmp, getff, putff);
+	}
+	for(int k = 0; k < file_count; k++){
+		fclose(arr_f[k]);
+	}
+	pointer = file_base;
+	while(pointer != 0){
+		remove(pointer->name);
+		struct file_list * for_del = pointer;
+		pointer = pointer->next;
+		free(for_del);
+	}
+	fclose(result_file);
+	free(arr_r);
+	free(arr_err);
+	free(arr_f);
+}
+
+void swap(void * arrr, int a, int b){
+	double * arr = (double *)arrr;
+	double c = arr[a];
+	arr[a] = arr[b];
+	arr[b] = c;
+}
+
+int cmp(void * aa, void * bb){
+	double * a = (double *)aa;
+	double * b = (double *)bb;
+	if(*a > *b)
+		return 1;
+	else if(*a < *b)
+		return -1;
+	else
+		return 0;
+}
+
+void getff(FILE * f, void * arr_r, int * arr_err, int num_err){
+	int err = fscanf(f, "%lf", (double *)arr_r);
+	if(-1 == err){
+		arr_err[num_err] = -1;
+	}
+}
+
+void putff(FILE * f, void * a){
+	double * r = (double *)a;
+	fprintf(f, "%lf ", *r);
 }
 
 int main(int argc, char **argv){
@@ -194,7 +196,7 @@ int main(int argc, char **argv){
 		typesort = -1;
 	}
 	clock_t start = clock();
-	merge_sortt(f, typesort);
+	merge_sortt(f, typesort, sizeof(double), &swap, &cmp, &getff, &putff);
 	clock_t finish = clock();
 	printf("Read %f seconds\n", ((float)(finish - start)) / CLOCKS_PER_SEC);
 	return 0;
