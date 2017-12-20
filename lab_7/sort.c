@@ -3,36 +3,41 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define size_for_qsort 14656
+#define SIZE_FOR_QSORT 1
 
 struct file_list{
 	char name[12];
 	struct file_list * next;
 };
 
-void qsortt(void * arr, int l, int r,
- void (*swap)(void * arrr, int a, int b),
+void qsortt(void * arr, int size_arr, int size_type,
  int (*cmp)(void * aa, void * bb),
- int typesort, int size_type){
-	int i = l;
-	int j = r;
-	if(l < r){
+ int typesort) {
+	int i = 0;
+	int j = size_arr;
+	if(size_arr >= 1){
 		while(i <= j){
-			while(-1 * typesort == cmp((char *)arr + i * size_type, (char *)arr + l * size_type)){
+			while(-1 * typesort == cmp((char *)arr + i * size_type, (char *)arr)){
 				i++;
 			}
-			while(1 * typesort == cmp((char *)arr + j * size_type, (char *)arr + l * size_type)){
+			while(1 * typesort == cmp((char *)arr + j * size_type, (char *)arr)){
 				j--;
 			}
 			if(i <= j){
-				swap(arr, i, j);
+				void * c = malloc(size_type);
+				memcpy(c, arr + i * size_type, size_type);
+				memcpy(arr + i * size_type, arr + j * size_type, size_type);
+				memcpy(arr + j * size_type, c, size_type);
+				free(c);
 				i++;
 				j--;
 			}
 		}
-	}else return;
-	qsortt(arr, l, i-1, swap, cmp, typesort, size_type);
-	qsortt(arr, i, r, swap, cmp, typesort, size_type);
+	} else {
+		return;
+	}
+	qsortt(arr, i-1, size_type, cmp, typesort);
+	qsortt(arr + i * size_type, size_arr - i, size_type, cmp, typesort);
 }
 
 int read(struct file_list ** head, FILE * f, int count, int typesort, int size_type,
@@ -44,11 +49,11 @@ int read(struct file_list ** head, FILE * f, int count, int typesort, int size_t
 	*head = (struct file_list *)malloc(sizeof(struct file_list));
 	(*head)->next = 0;
 	int last = 0;
-	void * arr = malloc(size_for_qsort * size_type);
-	int i = 0;
+	void * arr = malloc(SIZE_FOR_QSORT * size_type);
 	int stop_read = 0;
 	int err_r = 0;
-	for (i = 0; i < size_for_qsort; ++i){
+	int i = 0;
+	for ( i = 0; i < SIZE_FOR_QSORT; ++i){
 		getff(f, (char *)arr + i * size_type, &err_r, 0);
 		if(-1 == err_r){
 			last = i-1;
@@ -57,9 +62,9 @@ int read(struct file_list ** head, FILE * f, int count, int typesort, int size_t
 		}
 	}
 	if(!stop_read){
-		last = size_for_qsort - 1;
+		last = SIZE_FOR_QSORT - 1;
 	}
-	qsortt(arr, 0, last, swap, cmp, typesort, size_type);
+	qsortt(arr, last, size_type, cmp, typesort);
 	for (int j = 0; j < 8; ++j){
 		(*head)->name[j] = "sortfile"[j];
 	}
@@ -107,6 +112,7 @@ int find_el_and_write(void * arr_r, int * arr_err, FILE ** arr_f, FILE * result_
 		}
 	}
 	if(-1 == num_el_for_push){
+		free(min_or_max);
 		return -1;
 	}
 	putff(result_file, min_or_max);
@@ -162,6 +168,7 @@ void swap(void * arrr, int a, int b){
 	arr[b] = c;
 }
 
+//??????????????????????????????????
 int cmp(void * aa, void * bb){
 	double * a = (double *)aa;
 	double * b = (double *)bb;
