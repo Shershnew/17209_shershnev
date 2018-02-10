@@ -45,7 +45,14 @@ int main(){
 	graph[7][5] = 1;
 	graph[8][3] = 1;
 	graph[8][6] = 1;  
-		while((tec = find(graph)) != -1)
+	// graph[6][8] = 1;  
+	int t = 1;
+		while((tec = find(graph)) != -1){
 			delandprint(graph, tec);
+			t++;
+		}
+	if(t < WIDTH){
+		printf("\n cikl");
+	}
 	return 0;
 }
