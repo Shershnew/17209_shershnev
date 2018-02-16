@@ -128,6 +128,10 @@ struct data_base * read(FILE * f){
 			break;
 		}
 		insert(db, person);
+		int c = person.d1;
+		person.d1 = person.d2,
+		person.d2 = c;
+		insert(db, person);
 	}
 	return db;
 }

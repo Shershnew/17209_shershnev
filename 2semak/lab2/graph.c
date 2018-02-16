@@ -21,9 +21,9 @@ int main(int argc, char ** argv){
 
 	struct intList *queue = 0;
 	while(db->list != 0){
-		printf("\n");
 		int pop_int = pop_first(&db->list);
 		if(db->Htable[find(db, pop_int)]->was_print != 5){
+			printf("\n");
 			pushtoIntList(&queue, pop_int);
 		} else{
 			continue;
