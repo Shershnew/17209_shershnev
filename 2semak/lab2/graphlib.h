@@ -1,11 +1,7 @@
 #pragma once
 #include <stdio.h>
 #include "Htable.h"
-
-struct intList{
-	int data;
-	struct intList * next;
-};
+#include "lists.h"
 
 struct graph_base{
 	struct Hash_table * ht;
@@ -13,4 +9,5 @@ struct graph_base{
 };
 
 struct graph_base * read_graph(FILE * f);
+void free_graph(struct graph_base * gb);
 void printGraphToWidth(struct graph_base * gb);

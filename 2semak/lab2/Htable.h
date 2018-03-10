@@ -1,4 +1,5 @@
 #pragma once
+#include "lists.h"
 
 #define NAMESIZE 50
 #define BUFSIZE 30

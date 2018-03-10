@@ -1,6 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <time.h>
 #include "graphlib.h"
 
@@ -17,5 +15,6 @@ int main(int argc, char ** argv){
 		printf("Read %f seconds\n", ((float)(finish - start)) / CLOCKS_PER_SEC);
 	}
 	printGraphToWidth(gr);
+	free_graph(gr);
 	return 0;
 }

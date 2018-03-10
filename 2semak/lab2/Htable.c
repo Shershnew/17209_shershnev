@@ -90,8 +90,9 @@ struct Ht_data * Ht_get(struct Hash_table * ht, int num){
 }
 
 void Ht_free(struct Hash_table * ht){
-	for (int i = 0; i < ht->size; ++i){
+	for (int i = 0; i < ht->buf_size; ++i){
 		if(ht->Ht_data[i] != 0){
+			IntList_free(ht->Ht_data[i]->list);
 			free(ht->Ht_data[i]);
 		}
 	}
