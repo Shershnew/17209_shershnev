@@ -9,13 +9,13 @@ int main(int argc, char ** argv){
 	clock_t start = clock();
 	struct graph_base * gr = read_graph(f);
 	fclose(f);
-	if(gr->buf_size == 0){
+	if(gr->ht->buf_size == 0){
 		printf("error read\n");
 		return -1;
 	} else{
 		clock_t finish = clock();
 		printf("Read %f seconds\n", ((float)(finish - start)) / CLOCKS_PER_SEC);
 	}
-	printGraphFromHtableToWidth(gr);
+	printGraphToWidth(gr);
 	return 0;
 }

@@ -1,50 +1,6 @@
 #include "graphlib.h"
-
-unsigned int h1(char * str){
-	unsigned int hashAddress = 17;
-	for (int counter = 0; str[counter] != '\0'; counter++){
-		hashAddress = str[counter] + (hashAddress << 6) + (hashAddress << 16) - hashAddress;
-	}
-	return hashAddress;
-}
-
-unsigned int h2(char * str){
-	unsigned int hashAddress = 5381;
-	for (int counter = 0; str[counter] != '\0'; counter++){
-		hashAddress = ((hashAddress << 5) + hashAddress) + str[counter];
-	}
-	return hashAddress;
-}
-
-void insert_for_resize(struct graph_base * db, struct data * person){
-	int k = 0;
-	int key = 0;
-	while(1){
-		key = (h2(person->name) + k * h1(person->name)) % db->buf_size;
-		if(db->Htable[key] == 0){
-			db->Htable[key] = person;
-			db->size++;
-			break;
-		} else {
-			k++;
-		}
-	}
-}
-
-void resize(struct graph_base ** db){
-	struct graph_base * db_new = (struct graph_base *)calloc(1, sizeof(struct graph_base));
-	long long buf_size_new = (*db)->buf_size * 2;
-	db_new->Htable = (struct data **)calloc(buf_size_new, sizeof(struct data *));
-	db_new->buf_size = buf_size_new;
-	for (long long i = 0; i < (*db)->buf_size; ++i){
-		if((*db)->Htable[i] != 0){
-			insert_for_resize(db_new, (*db)->Htable[i]);
-		}
-	}
-	(*db)->Htable = db_new->Htable;
-	(*db)->buf_size = db_new->buf_size;
-	free(db_new);
-}
+#include <string.h>
+#include <stdlib.h>
 
 int pop_first(struct intList ** l){
 	struct intList * p = (*l)->next;
@@ -75,112 +31,88 @@ void pushtoIntList(struct intList ** l, int num){
 	}
 }
 
-struct insert{
-	int d1;
-	int d2;
-};
-
-void insert(struct graph_base * db, struct insert person){
-	int k = 0;
-	int key = 0;
-
-	if (db->size >= db->buf_size/2){
-		resize(&db);
+void printlist(struct intList * l){
+	while(l != 0){
+		printf("%d -- ", l->data);
+		l=l->next;
 	}
-
-	char s[NAMESIZE];
-	itoa(person.d1, s, 10);
-	while(1){
-		key = (h2(s) + k * h1(s)) % db->buf_size;
-		if(db->Htable[key] == 0){
-			db->Htable[key] = (struct data *)malloc(sizeof(struct data));
-			db->Htable[key]->d1 = person.d1;
-			db->Htable[key]->list = 0;
-			pushtoIntList(&db->Htable[key]->list, person.d2);
-			pushtoIntList(&db->list, person.d1);
-			memcpy(db->Htable[key]->name, s, NAMESIZE);
-			db->size++;
-			break;
-		} else if(db->Htable[key]->d1 == person.d1){
-			pushtoIntList(&db->Htable[key]->list, person.d2);
-			pushtoIntList(&db->list, person.d1);
-			break;
-		} else {
-			k++;
-		}	 
-	}
+	printf("\n");
 }
 
 struct graph_base * read_graph(FILE * f){
-	struct graph_base * db = (struct graph_base *)calloc(1, sizeof(struct graph_base));
+	struct graph_base * gb = (struct graph_base *)calloc(1, sizeof(struct graph_base));
+	struct Ht_data * d;
 	if(NULL == f){
-		db->buf_size = 0;
-		return db;
+		gb->ht->buf_size = 0;
+		return gb;
 	}
-	db->buf_size = BUFSIZE;
-	db->size = 0;
-	db->Htable = (struct data **)calloc(db->buf_size, sizeof(struct data *));
-	struct insert person;
+
+	gb->ht = Ht_init();
+	
 	while(1){
-		int er = fscanf(f, "%d %d", &person.d1, &person.d2);
+		int node1, node2;
+		int er = fscanf(f, "%d %d", &node1, &node2);
 		if(er != 2){
 			break;
 		}
-		insert(db, person);
-		int c = person.d1;
-		person.d1 = person.d2,
-		person.d2 = c;
-		insert(db, person);
-	}
-	return db;
-}
 
-int find(struct graph_base *db, int num){
-	char str[NAMESIZE];
-	itoa(num, str, 10);
-	int k = 0;
-	int key = 0;
-	while(1){
-		key = (h2(str) + k * h1(str)) % db->buf_size;
-		if(db->Htable[key] != 0 && !strcmp(str, db->Htable[key]->name)){
-			return key;
+		pushtoIntList(&gb->list, node1);
+		pushtoIntList(&gb->list, node2);
+
+		d = Ht_get(gb->ht, node1);
+		if(d == 0){
+			d = (struct Ht_data *)calloc(1, sizeof(struct Ht_data));
+			itoa(node1, d->name, 10);
+			d->node = node1;
+			pushtoIntList(&(d->list), node2);
+			Ht_set(gb->ht, d);
 		} else{
-			k++;
-			if(k == db->buf_size){
-				break;
-			}
+			pushtoIntList(&(d->list), node2);
+			Ht_set(gb->ht, d);
 		}
+
+		d = Ht_get(gb->ht, node2);
+		if(d == 0){
+			d = (struct Ht_data *)calloc(1, sizeof(struct Ht_data));
+			itoa(node2, d->name, 10);
+			d->node = node2;
+			pushtoIntList(&(d->list), node1);
+			Ht_set(gb->ht, d);
+		} else{
+			pushtoIntList(&(d->list), node1);
+			Ht_set(gb->ht, d);
+		}
+
 	}
-	return -1;
+	return gb;
 }
 
-void printGraphFromHtableToWidth(struct graph_base * db){
+
+void printGraphToWidth(struct graph_base * gb){
 	struct intList *queue = 0;
-	while(db->list != 0){
-		int pop_int = pop_first(&db->list);
-		if(db->Htable[find(db, pop_int)]->was_print != 5){
+	while(gb->list != 0){
+		int pop_int = pop_first(&gb->list); 
+		if(Ht_get(gb->ht, pop_int)->was_print != 5){
 			printf("\n");
 			pushtoIntList(&queue, pop_int);
+			Ht_get(gb->ht, queue->data)->was_print = 5;
 		} else{
 			continue;
-		}
-		db->Htable[find(db, queue->data)]->was_print = 5;
+		} 
 		while(queue != 0){
 			int tec = pop_first(&queue);
-			printf("%d -- ", tec);
-			int key = find(db, tec);
-			if(key != -1){
-				struct intList * p = db->Htable[key]->list;
-				do{
-					int key2 = find(db, p->data);
-					if(key2 == -1){
+			printf("%d --- ", tec);
+			struct Ht_data * htd = Ht_get(gb->ht, tec);
+			if(htd != 0){
+				struct intList * p = htd->list;
+				while(p != 0){
+					struct Ht_data * htd2 = Ht_get(gb->ht, p->data);
+					if(htd2->was_print != 5){
 						pushtoIntList(&queue, p->data);
-					} else if(db->Htable[key2]->was_print != 5){
-						pushtoIntList(&queue, p->data);
-						db->Htable[key2]->was_print = 5;
+						htd2->was_print = 5;
 					}
 					p = p->next;
-				} while(p != 0);
+				}
 			}
 		}
 	}
