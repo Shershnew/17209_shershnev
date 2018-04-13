@@ -3,7 +3,7 @@
 
 struct node{
 	int c;
-	unsigned int freq;
+	unsigned long long freq;
 	int was;
 	struct node * left;
 	struct node * right;
@@ -28,7 +28,7 @@ struct node * find_node(struct node ** tree, int size, char c){
 
 struct node * node_min(struct node ** tree, int size){
 	struct node * tec = 0;
-	unsigned long long min = 9999;
+	unsigned long long min = 999999999999999;
 	for (int i = 0; i < size; ++i)
 	{
 		if(tree[i]->was == 0 && tree[i]->freq <= min){
@@ -41,13 +41,13 @@ struct node * node_min(struct node ** tree, int size){
 }
 
 int main(int argv, char ** argc){
-	FILE * f = fopen(argc[1], "r");
+	FILE * f = fopen(argc[1], "rb");
 	if(f == 0){
 		printf("Error read\n");
 		return -1;
 	}
 	unsigned int size_table = 0;
-	unsigned int p = 0;
+	unsigned long long p = 0;
 	unsigned char r = 0;
 	unsigned char ost = 0;
 
@@ -95,6 +95,27 @@ int main(int argv, char ** argc){
 		p = p << 24;
 		tree[i]->freq += p;
 		p = 0;
+
+		fscanf(f, "%c", &r);
+		p = r;
+		p = p << 32;
+		tree[i]->freq += p;
+		p = 0;
+		fscanf(f, "%c", &r);
+		p = r;
+		p = p << 40;
+		tree[i]->freq += p;
+		p = 0;
+		fscanf(f, "%c", &r);
+		p = r;
+		p = p << 48;
+		tree[i]->freq += p;
+		p = 0;
+		fscanf(f, "%c", &r);
+		p = r;
+		p = p << 56;
+		tree[i]->freq += p;
+		p = 0;
 	}
 
 	for (int i = 0; i < size_table - 1; ++i){
@@ -110,10 +131,9 @@ int main(int argv, char ** argc){
 		tree[i]->freq = tree[i]->left->freq + tree[i]->right->freq; 
 	}
 	fclose(f);
-
-	FILE * res = fopen("result.txt", "w");
-	FILE * f2 = fopen(argc[1], "r");
-	for (int i = 0; i < size_table * 5 + 5; ++i){
+	FILE * res = fopen("result.txt", "wb");
+	FILE * f2 = fopen(argc[1], "rb");
+	for (int i = 0; i < size_table * 9 + 5; ++i){
 		char k = 0;
 		fscanf(f2, "%c", &k);
 	}
@@ -122,7 +142,6 @@ int main(int argv, char ** argc){
 	unsigned char wr = 0;
 	int ostflag = 0;
 	struct node * p1 = tree[size_table*2 - 2];
-
 	int er = fscanf(f2, "%c", &cc);
 	if(er == 1)
 	while(1){
@@ -132,21 +151,22 @@ int main(int argv, char ** argc){
 			cc = cc << (8 - ost);
 		}
 		for (int i = 0; i < (ostflag ? ost : 8); ++i){
-			printf("--------------c = %d\n", cc/128);
-			printf("i == %d\n", i);
 			if(cc / 128 == 0){
 				cc = cc << 1;
 				if(p1->right != 0){
 					p1 = p1->right;	
+				} else{
+					printf("error\n");
 				}
 			} else{
 				cc = cc << 1;
 				if(p1->left != 0){
 					p1 = p1->left;	
+				} else{
+					printf("error\n");
 				}
 			}
 			if(p1->c != -1){
-				printf("i = %d c = %c\n",i, p1->c);
 				fprintf(res, "%c", p1->c);
 				p1 = tree[size_table*2 - 2];
 			}
@@ -156,10 +176,7 @@ int main(int argv, char ** argc){
 			break;
 		}
 	}
-	printf("ost = %d\n", ost);
 	fclose(f2);
 	fclose(res);
-	printf("size_table = %d\n", size_table);
-	print_freq(tree, size_table*2-1);
 	return 0;
 }
