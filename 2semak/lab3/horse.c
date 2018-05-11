@@ -94,7 +94,7 @@ int findway(int ** mas, int w, int h, int x, int y, int iter){
 	while(1){
 		int mini = findmin(mas, x, y, w, h, without);
 		if(mini == 9){
-			// mas[x][y] = 0;
+			mas[x][y] = 0;
 			return 0;
 		}
 		switch(mini){
@@ -126,5 +126,9 @@ int main(){
 	int res = findway(mas, w, h, x, y, 1);
 	printf("\n%d\n", res);
 	printdes(mas, w, h);
+	for (int i = 0; i < w; ++i){
+		free(mas[i]);
+	}
+	free(mas);
 	return 0;
 }

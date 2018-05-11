@@ -27,7 +27,21 @@ int main(){
 	printll(lru);
 	cache_put(lru,5,9);
 	printll(lru);
+	cache_get(lru, 3);
+	printll(lru);
+	cache_get(lru, 1);
+	printll(lru);
 
+
+	cache_remove_el(lru, 3);
+	cache_remove_el(lru, 4);
+	cache_remove_el(lru, 7);
+	cache_remove_el(lru, 2);
+	printll(lru);
+	cache_get(lru, 1);
+	printll(lru);
+	cache_put(lru,5,9);
+	printll(lru);
 	cache_remove(lru);
 	return 0;
 }

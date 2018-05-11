@@ -15,6 +15,8 @@ int main(int argc, char ** argv){
 		printf("Read %f seconds\n", ((float)(finish - start)) / CLOCKS_PER_SEC);
 	}
 	printGraphToWidth(gr);
+	printf("\n");
+	printGraphWayFrom(gr, 1);
 	free_graph(gr);
 	return 0;
 }

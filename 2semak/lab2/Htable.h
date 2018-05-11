@@ -5,7 +5,7 @@
 #define BUFSIZE 30
 
 struct Ht_data{
-	char name[NAMESIZE]; //for hesh
+	char name[NAMESIZE]; //for hаsh
 	int node;
 	struct intList * list;
 	int was_print;

@@ -85,3 +85,47 @@ void printGraphToWidth(struct graph_base * gb){
 		}
 	}
 }
+
+
+int find_else_way(struct graph_base * gb, struct intList * way){
+	struct intList * p = way;
+	struct Ht_data * dt;
+	while(p != 0){
+		dt = Ht_get(gb->ht, p->data);
+		if(dt != 0 && dt->list != 0){
+			return p->data;
+		}
+		p = p->next;
+	}
+	return -1;
+}
+
+void printGraphWayFrom(struct graph_base * gb, int node){
+	struct intList * ring = 0;
+	IntList_push(&ring, node);
+	struct intList * p = ring;
+	struct Ht_data * dt;
+	int sosed = -1;
+	int tec = 0;
+	int t2;
+	while(1){
+		tec = find_else_way(gb, p);
+		sosed = -1;
+		t2 = tec;
+		if(tec == -1){
+			break;
+		}
+		p = IntList_get_ondata(p, tec);
+		dt = Ht_get(gb->ht, tec);
+		int c = 0;
+		while(sosed != tec){
+			sosed = IntList_pop_first(&(dt->list));
+			IntList_pop_ondata(&(Ht_get(gb->ht, sosed)->list), t2);
+			t2 = sosed;
+			IntList_push_from(&p, sosed, c);
+			c++;
+			dt = Ht_get(gb->ht, sosed);
+		}
+	} 
+	IntList_print(ring);
+}

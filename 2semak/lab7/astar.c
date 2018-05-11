@@ -116,7 +116,7 @@ int main(){
 
 	struct queue * frointer = 0;
 	struct queue * current = 0;
-	struct queue * goal = graph[5][5];
+	struct queue * goal = graph[7][9];
 	struct queue * start = graph[0][0];
 	start->cost = 0;
 	queue_put(&frointer, start);
@@ -139,7 +139,7 @@ int main(){
 		}
 	}
 	while(current != start){
-		map[current->x][current->y] = 'O';
+		map[current->x][current->y] = '.';
 		current = current->from;
 	}
 	map[start->x][start->y] = 's';

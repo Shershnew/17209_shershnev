@@ -133,6 +133,11 @@ void neron_learn(struct neron_net * nn, double * data_for_learn, double * data_r
 }
 
 void init_file(char * str, int size, double value){
+	FILE * t = fopen(str, "r");
+	if(t != NULL){
+		fclose(t);
+		return;
+	}
 	srand(time(NULL));
 	double n = 0;
 	FILE * f = fopen(str, "w");
@@ -167,6 +172,20 @@ double * getdata(char * str){
 	return mas;
 }
 
+int get_ansver(struct neron_net * nn, char * str){
+	double * data = getdata(str);
+	neron_start(nn, data);
+	int max = 0;
+	int maxi = 0;
+	for (int i = 0; i < 9; ++i){
+		if(nn->data->ansvers[nn->size_ansvers - 9 + i] > max){
+			max = nn->data->ansvers[nn->size_ansvers - 9 + i];
+			maxi = i + 1;
+		}
+	}
+	return maxi;
+}
+
 int main(int argc, char ** argv){
 	init_file(argv[1], 10000, 0.39);
 	unsigned long long struc_net[3] = {25*30, 25*30, 9};
@@ -176,6 +195,11 @@ int main(int argc, char ** argv){
 	double * data2 = getdata(argv[3]);
 	double * data3 = getdata(argv[4]);
 	double * data4 = getdata(argv[5]);
+	double * data5 = getdata(argv[6]);
+	double * data6 = getdata(argv[7]);
+	double * data7 = getdata(argv[8]);
+	double * data8 = getdata(argv[9]);
+	double * data9 = getdata(argv[10]);
 	double result1[9] = {1.,0.,0.,0.,0.,0.,0.,0.,0.};
 	double result2[9] = {0.,1.,0.,0.,0.,0.,0.,0.,0.};
 	double result3[9] = {0.,0.,1.,0.,0.,0.,0.,0.,0.};
@@ -187,12 +211,15 @@ int main(int argc, char ** argv){
 	double result9[9] = {0.,0.,0.,0.,0.,0.,0.,0.,1.};
 	
 	for (long long i = 0; 1; ++i){
-		// printf("====\n");
 		neron_learn(nn, data1, result1);
 		neron_learn(nn, data2, result2);
 		neron_learn(nn, data3, result3);
 		neron_learn(nn, data4, result4);
-		// printf("++++++++\n");
+		neron_learn(nn, data5, result5);
+		neron_learn(nn, data6, result6);
+		neron_learn(nn, data7, result7);
+		neron_learn(nn, data8, result8);
+		neron_learn(nn, data9, result9);
 		if(i % 100 == 0){
 			save_file(argv[1], nn);
 			system("cls");
@@ -213,6 +240,31 @@ int main(int argc, char ** argv){
 			}
 			printf("\nansvers 4:\n");
 			neron_start(nn, data4);
+			for (int i = nn->size_ansvers - 9; i < nn->size_ansvers; ++i){
+				printf("%lf ", nn->data->ansvers[i]);
+			}	
+			printf("\nansvers 5:\n");
+			neron_start(nn, data5);
+			for (int i = nn->size_ansvers - 9; i < nn->size_ansvers; ++i){
+				printf("%lf ", nn->data->ansvers[i]);
+			}	
+			printf("\nansvers 6:\n");
+			neron_start(nn, data6);
+			for (int i = nn->size_ansvers - 9; i < nn->size_ansvers; ++i){
+				printf("%lf ", nn->data->ansvers[i]);
+			}	
+			printf("\nansvers 7:\n");
+			neron_start(nn, data7);
+			for (int i = nn->size_ansvers - 9; i < nn->size_ansvers; ++i){
+				printf("%lf ", nn->data->ansvers[i]);
+			}	
+			printf("\nansvers 8:\n");
+			neron_start(nn, data8);
+			for (int i = nn->size_ansvers - 9; i < nn->size_ansvers; ++i){
+				printf("%lf ", nn->data->ansvers[i]);
+			}	
+			printf("\nansvers 9:\n");
+			neron_start(nn, data9);
 			for (int i = nn->size_ansvers - 9; i < nn->size_ansvers; ++i){
 				printf("%lf ", nn->data->ansvers[i]);
 			}	
