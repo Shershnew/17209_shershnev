@@ -1,6 +1,6 @@
 #include <string>
 
-namespace Fmap{
+namespace Fmap {
 
 typedef std::string Key;
 
@@ -9,7 +9,7 @@ public:
 	unsigned age;
 	unsigned weight;
 
-	Value(int agge = 0){
+	Value(int agge = 0) {
 		age = agge;
 		weight = 11;
 	}
@@ -26,10 +26,10 @@ class Flat_map {
 private:
 	Value * mas;
 	Key * keys;
-	long long len;
-	long long len_now;
-	Value define_value;
+	size_t len;
+	size_t len_now;
 
+	size_t bin_search(const Key k) const;
 	inline void set(long long i, const Key& k, const Value& v);
 
 public:
@@ -65,7 +65,7 @@ public:
 
 	// Возвращает значение по ключу. Бросает исключение при неудаче.
 	Value& at(const Key& k);
-	const Value& at(const Key& k) const;
+	const Value& at(const Key& k) const; //вызывается на константный обектах
 
 	size_t size() const;
 	bool empty() const;
@@ -82,6 +82,7 @@ public:
 		}
 			return true;
 	}
+
 	friend bool operator!=(const Flat_map & a, const Flat_map & b){
 		return !(a == b);
 	}

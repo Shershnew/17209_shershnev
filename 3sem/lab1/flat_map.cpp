@@ -1,10 +1,11 @@
 #include "flat_map.h"
 #include <iostream>
+#include <algorithm>
 using namespace Fmap;
 
-Flat_map::Flat_map(){
-	len = 1;
-	len_now = 0;
+const size_t len_kef = 2; //коэффициент расширения контейнера
+
+Flat_map::Flat_map(): len(1), len_now(0) {
 	mas = new Value[len];
 	keys = new Key[len];
 }
@@ -14,9 +15,7 @@ Flat_map::Flat_map(const Flat_map& b){
 	len_now = b.len_now;
 	mas = new Value[len];
 	keys = new Key[len];
-	for (int i = 0; i < len_now; ++i){
-		set(i,b.keys[i],b.mas[i]);
-	}	
+	std::copy(&b,(&b+1), this);	
 }
 
 Flat_map::~Flat_map(){
@@ -24,129 +23,115 @@ Flat_map::~Flat_map(){
 	delete[] keys;
 }
 
+size_t Flat_map::bin_search(const Key k) const{
+	if(len_now == 0){
+		return -1;
+	}
+	if(k == keys[0])
+		return 0;
+	if(k == keys[len_now - 1])
+		return len_now - 1;
+	size_t l = 0,r = len_now - 1;
+	while(l < r){
+		size_t tec = l + ((r - l) / 2);
+		if(k == keys[tec]){
+			return tec;
+		}
+		else if(k > keys[tec]){
+			l = tec + 1;
+		}
+		else{
+			r = tec;
+		}
+	}
+	if(k == keys[l])
+		return l;
+	if(k == keys[r])
+		return r;
+	return -1;
+}
+
+void Flat_map::swap(Flat_map& b){
+	std::swap(*this, b);
+}
+
 size_t Flat_map::size() const{
-	return (size_t)len_now;
+	return len_now;
 }
 
 bool Flat_map::empty() const{
-	if(len_now == 0)
-		return true;
-	return false;
+	return (len_now == 0);
 }
 
 void Flat_map::print(){
-	for (int i = 0; i < len_now; ++i)
-	{
+	for (int i = 0; i < len_now; ++i){
 		std::cout << i << " - " << keys[i] << " - " << mas[i].age << std::endl;
 	}
+	std::cout << std::endl;
 }
 
 Value& Flat_map::operator[](const Key& k){
-	try{
-		return at(k);
-	}catch(const char * str){
-		return define_value;
+	size_t el = bin_search(k);
+	if(-1 != el){
+		return mas[el];
 	}
+	Value * v = new Value(0);
+	insert(k,*v);
+	return *v;
 }
 
 Flat_map& Flat_map::operator=(const Flat_map& b){
-	this->~Flat_map();
+	if(this == &b){
+		return *this;
+	}
 	len = b.len;
 	len_now = b.len_now;
+	delete[] mas;
+	delete[] keys;
 	mas = new Value[len];
 	keys = new Key[len];
-	for (int i = 0; i < len_now; ++i){
-		set(i,b.keys[i],b.mas[i]);
-	}
+	std::copy(b.mas, b.mas + len_now, mas);
+	std::copy(b.keys, b.keys + len_now, keys);
 	return *this;
 }
 
 bool Flat_map::contains(const Key& k) const{
-	if(len_now == 0){
+	if(-1 == bin_search(k)){
 		return false;
 	}
-	long long l = 0,r = len_now - 1;
-	while(l != r){
-		long long tec = l + ((r - l) / 2);
-		if(k == keys[tec]){
-			return true;
-		}
-		else if(k > keys[tec]){
-			l = tec + 1;
-		}
-		else{
-			r = tec;
-		}
-	}
-	if(k == keys[l]){
-		return true;
-	}
-	return false;
+	return true;
 }
 
 bool Flat_map::erase(const Key& k){
-	if(len_now == 0){
+	size_t el = bin_search(k);
+	if(-1 == el)
 		return false;
-	}
-	long long l = 0,r = len_now - 1;
-	while(l != r){
-		long long tec = l + ((r - l) / 2);
-		if(k == keys[tec]){
-			len_now--;
-			for (int i = tec; i < len_now - 1; ++i){
-				mas[i] = mas[i+1];
-				keys[i] = keys[i+1];
-			}
-			return true;
-		}
-		else if(k > keys[tec]){
-			l = tec + 1;
-		}
-		else{
-			r = tec;
-		}
-	}
-	if(k == keys[l]){
-		len_now--;
-		for (int i = l; i < len_now - 1; ++i){
-			mas[i] = mas[i+1];
-			keys[i] = keys[i+1];
-		}
-		return true;
-	}
-	return false;
+	len_now--;
+	// for (size_t i = el; i < len_now; ++i){
+	// 	mas[i] = mas[i+1];
+	// 	keys[i] = keys[i+1];
+	// }
+	std::copy(mas+el+1, mas + len_now, mas+el);
+	std::copy(keys+el+1, keys + len_now, keys+el);
+	return true;
 }
 
 void Flat_map::clear(){
-	this->~Flat_map();
-	Flat_map();
+	len_now = 0;
 }
 
 Value& Flat_map::at(const Key& k){
 	if(len_now == 0){
 		throw "контейнер пуст";
 	}
-	long long l = 0,r = len_now - 1;
-	while(l != r){
-		long long tec = l + ((r - l) / 2);
-		if(k == keys[tec]){
-			return mas[tec];
-		}
-		else if(k > keys[tec]){
-			l = tec + 1;
-		}
-		else{
-			r = tec;
-		}
-	}
-	if(k == keys[l]){
-		return mas[l];
-	}
-	throw "элемента не существует";
+	size_t el = bin_search(k);
+	if(-1 == el)
+		throw "элемента не существует";//???????????????
+	return mas[el];
 }
 
 const Value& Flat_map::at(const Key& k) const{
-	return (const Value&)at(k);
+	return (const Value&)at(k);//???????????????
 }
 
 inline void Flat_map::set(long long i, const Key& k, const Value& v){
@@ -156,20 +141,11 @@ inline void Flat_map::set(long long i, const Key& k, const Value& v){
 
 bool Flat_map::insert(const Key& k, const Value& v){
 	if(len_now == len){
-		long long new_len = len * 2;
+		size_t new_len = len * len_kef;
 		Value * mas2 = new Value[new_len];
 		Key * keys2 = new Key[new_len];
-		if(mas2 == 0){
-			return false;
-		}
-		if(keys2 == 0){
-			delete[] mas2;
-			return false;
-		}
-		for (int i = 0; i < len_now; ++i){
-			mas2[i] = mas[i];
-			keys2[i] = keys[i];
-		}
+		std::copy(mas, mas + len_now, mas2);
+		std::copy(keys, keys + len_now, keys2);
 		delete[] mas;
 		delete[] keys;
 		mas = mas2;
@@ -186,9 +162,17 @@ bool Flat_map::insert(const Key& k, const Value& v){
 		len_now++;
 		return true;
 	}
-	long long l = 0,r = len_now - 1;
-	while(l != r){
-		long long tec = l + ((r - l) / 2);
+	if(k == keys[0]){
+		set(0,k,v);
+		return true;
+	}
+	if(k == keys[len_now - 1]){
+		set(len_now - 1,k,v);
+		return true;
+	}
+	size_t l = 0,r = len_now - 1;
+	while(l < r){
+		size_t tec = l + ((r - l) / 2);
 		if(k == keys[tec]){
 			set(tec,k,v);
 			return true;
@@ -200,10 +184,10 @@ bool Flat_map::insert(const Key& k, const Value& v){
 			r = tec;
 		}
 	}
-	if(k == keys[l]){
-		set(l,k,v);
-		return true;
-	}
+	if(k < keys[0])
+		l = 0;
+	if(k > keys[len_now - 1])
+		l = len_now;
 	for(int i = len_now; i > l; i--){
 		mas[i] = mas[i-1];
 		keys[i] = keys[i-1];
