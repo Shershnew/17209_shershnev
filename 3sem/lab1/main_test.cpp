@@ -7,9 +7,9 @@ TEST(Fmaptest, insert_erase_at) {
 	Value v1(1), v2(2), v3(3), v4(4);
 	Flat_map map1;
 	EXPECT_EQ(map1.size(), 0);
-	EXPECT_EQ(map1.empty(), true);
+	EXPECT_TRUE(map1.empty());
 	map1.insert("el1", v1);
-	map1.insert("el3", v3);
+	map1.insert("el3", v3); /// std copy , copy backword
 	map1.insert("el2", v2);
 	map1.insert("el4", v4);
 	EXPECT_EQ(v4.age, map1.at("el4").age);
@@ -44,7 +44,7 @@ TEST(Fmaptest, size_contains_empty_clear) {
 	EXPECT_EQ(4, map1.size());
 	map1.clear();
 	EXPECT_TRUE(map1.empty());
-	EXPECT_EQ(0, map1.size());
+	EXPECT_EQ(map1.size(), 0);
 }
 
 TEST(Fmaptest, brackets) {

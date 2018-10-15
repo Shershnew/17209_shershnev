@@ -30,9 +30,12 @@ private:
 	size_t len_now;
 
 	size_t bin_search(const Key k) const;
+	int bin_search_er(const Key k) const;
 	inline void set(long long i, const Key& k, const Value& v);
 
 public:
+	Flat_map(Flat_map&& b);
+	
   	Flat_map();
 
   	Flat_map(const Flat_map& b);
@@ -72,7 +75,7 @@ public:
 
 	friend bool operator==(const Flat_map & a, const Flat_map & b){
 		if(a.len_now == b.len_now){
-			for (int i = 0; i < a.len_now; ++i){
+			for (size_t i = 0; i < a.len_now; ++i){
 				if(!((a.mas[i] == b.mas[i]) && (a.keys[i] == b.keys[i]))){
 					return false;
 				}
