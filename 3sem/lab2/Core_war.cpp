@@ -1,7 +1,5 @@
 #include "Core_war.h"
 
-using namespace coreWar;
-
 Core_war::Core_war(){
 	for (size_t i = 0; i < war_space_len; ++i){
 		war_space[i] = new Node();
@@ -34,7 +32,7 @@ bool isdigit_(string &str){
 	return true;
 }
 
-std::pair<size_t,int> Core_war::get_arg(size_t &i, std::vector<string> & words){
+std::pair<size_t,int> Node::get_arg(size_t &i, std::vector<string> & words){
 	i++;
 	std::pair<size_t,int> arg = {0, 0};
 	if(words[i] == "#"){
@@ -93,37 +91,8 @@ bool Core_war::add_unit(string path){
 	units.push_back(un);
 
 	for (size_t i = 0; i < words.size(); ++i){
-		if(words[i] == "DAT"){
-			set(new DAT(get_arg(i, words)), un.unit_pointer++);
-		}else
-		if(words[i] == "MOV"){
-			set(new MOV(get_arg(i, words), get_arg(i, words)), un.unit_pointer++);
-		}else
-		if(words[i] == "ADD"){
-			set(new ADD(get_arg(i, words), get_arg(i, words)), un.unit_pointer++);
-		}else
-		if(words[i] == "SUB"){
-			set(new SUB(get_arg(i, words), get_arg(i, words)), un.unit_pointer++);
-		}else
-		if(words[i] == "JMP"){
-			set(new JMP(get_arg(i, words)), un.unit_pointer++);
-		}else
-		if(words[i] == "JMZ"){
-			set(new JMZ(get_arg(i, words), get_arg(i, words)), un.unit_pointer++);
-		}else
-		if(words[i] == "DJZ"){
-			set(new DJZ(get_arg(i, words), get_arg(i, words)), un.unit_pointer++);
-		}else
-		if(words[i] == "CMP"){
-			set(new CMP(get_arg(i, words), get_arg(i, words)), un.unit_pointer++);
-		}else{
-			std::cout << "ошибка компиляции";
-		};
+		set(Factory::getFactory().createCommandByName(words[i], i, words), un.unit_pointer++);
 	}
-}
-
-Node * createNodeByName(const std::string& name) {
-	
 }
 
 int Node::get_number_from_args(std::array<Node *, war_space_len> &arr, Unit & un, size_t i){
@@ -134,7 +103,7 @@ int Node::get_number_from_args(std::array<Node *, war_space_len> &arr, Unit & un
 		if(!arr[(un.unit_pointer + args[i].second) % war_space_len]->isCommand){
 			return arr[(un.unit_pointer + args[i].second) % war_space_len]->number;
 		}else{
-			std::cout << "обращение за числом к команде" << std::endl;
+			std::cout << "обращение за числом к команде 1" << std::endl;
 		}
 	}
 }
@@ -150,56 +119,7 @@ int Node::get_addres_from_args(std::array<Node *, war_space_len> &arr, Unit & un
 		if(!arr[(un.unit_pointer + args[i].second) % war_space_len]->isCommand){
 			return arr[(un.unit_pointer + args[i].second) % war_space_len]->number;
 		}else{
-			std::cout << "обращение за числом к команде" << std::endl;
+			std::cout << "обращение за числом к команде 2" << std::endl;
 		}
-	}
-}
-
-bool DAT::execute(std::array<Node *, war_space_len> & arr, Unit & un){
-	canExecute();
-	isCommand = false;
-	number = get_number_from_args(arr, un, 0);
-}
-
-bool MOV::execute(std::array<Node *, war_space_len> & arr, Unit & un){
-	canExecute();
-	arr[get_addres_from_args(arr, un, 1)]->isCommand = false;
-	arr[get_addres_from_args(arr, un, 1)]->number = get_number_from_args(arr, un, 0);
-}
-
-bool ADD::execute(std::array<Node *, war_space_len> & arr, Unit & un){
-	canExecute();
-	arr[get_addres_from_args(arr, un, 1)]->number += get_number_from_args(arr, un, 0);
-}
-
-bool SUB::execute(std::array<Node *, war_space_len> & arr, Unit & un){
-	canExecute();
-	arr[get_addres_from_args(arr, un, 1)]->number -= get_number_from_args(arr, un, 0);
-}
-
-bool JMP::execute(std::array<Node *, war_space_len> & arr, Unit & un){
-	canExecute();
-	un.unit_pointer = (-1 + get_addres_from_args(arr, un, 0)) % war_space_len;
-}
-
-bool JMZ::execute(std::array<Node *, war_space_len> & arr, Unit & un){
-	canExecute();
-	if(get_number_from_args(arr, un, 0) == 0){
-		un.unit_pointer = (-1 + get_addres_from_args(arr, un, 1)) % war_space_len;		
-	}
-}
-
-bool DJZ::execute(std::array<Node *, war_space_len> & arr, Unit & un){
-	canExecute();
-	arr[get_addres_from_args(arr, un, 0)]->number -= 1;
-	if(get_number_from_args(arr, un, 0) == 0){
-		un.unit_pointer = (-1 + get_addres_from_args(arr, un, 1)) % war_space_len;		
-	}
-}
-
-bool CMP::execute(std::array<Node *, war_space_len> & arr, Unit & un){
-	canExecute();
-	if(get_number_from_args(arr, un, 0) != get_number_from_args(arr, un, 1)){
-		un.unit_pointer += 1;
 	}
 }

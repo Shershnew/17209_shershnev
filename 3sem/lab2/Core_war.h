@@ -1,5 +1,4 @@
-#ifndef Core_warr
-#define Core_warr
+#pragma once
 
 #include <iostream>
 #include <vector>
@@ -9,14 +8,15 @@
 #include <chrono>
 #include <thread>
 
-namespace coreWar{
+class Node;
+typedef std::string string;
+
+#include "Factory_commands.h"
 
 const size_t space_width = 20;
 const size_t space_height = 20;
 const size_t war_space_len = space_height * space_width;
-const size_t max_size_unit = 10;
-
-typedef std::string string;
+const size_t max_size_unit = 15;
 
 class Unit {
 public:
@@ -28,12 +28,13 @@ class Node{
 protected:
 	int get_addres_from_args(std::array<Node *, war_space_len> &arr, Unit & un, size_t i);
 	int get_number_from_args(std::array<Node *, war_space_len> &arr, Unit & un, size_t i);
+	static std::pair<size_t,int> get_arg(size_t &i, std::vector<string> & words);
 public:
 	bool isCommand = false;
 	int number = 0;
 	std::vector<std::pair<size_t,int>> args;
 	Node() : isCommand(false), number(0){}
-	~Node(){}///????????????????????????????????????????????????????????????????????????????
+	virtual ~Node(){}
 	void canExecute(){
 		if(!isCommand){
 			throw "выполнение команды которой нет";
@@ -47,7 +48,7 @@ public:
 class Core_war{
 private:
 	void draw(){
-		std::this_thread::sleep_for(std::chrono::milliseconds(200));
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		system("clear");
 		for (size_t i = 0; i < space_height; ++i){
 			for (size_t j = 0; j < space_width; ++j){
@@ -55,7 +56,7 @@ private:
 					std::cout << "f ";
 				} else
 				if(war_space[j + (i * space_height)]->number > 0){
-					std::cout << "# ";
+					std::cout << war_space[j + (i * space_height)]->number;
 				} else{
 					std::cout << "  ";
 				}
@@ -64,7 +65,6 @@ private:
 		}
 	}
 	void set(Node * node, size_t i);
-	std::pair<size_t,int> get_arg(size_t &i, std::vector<string> & words);
 public:
 	std::vector<Unit> units;
 	std::array<Node *, war_space_len> war_space;
@@ -85,112 +85,3 @@ public:
 		return -1;
 	}
 };
-
-//DAT B Инициализировать местоположение для значения B.
-class DAT: public Node{
-public:
-	DAT(std::pair<size_t,int> arg1){
-		isCommand = true;
-		args.push_back(arg1);
-		std::cout << arg1.first << " -- " << arg1.second << std::endl;
-	}
-	bool execute(std::array<Node *, war_space_len> &arr, Unit & un) override;
-};
-
-//MOV AB Переместить A в местоположение B. 
-class MOV: public Node{
-public:
-	MOV(std::pair<size_t,int> arg1, std::pair<size_t,int> arg2){
-		isCommand = true;
-		args.push_back(arg1);
-		args.push_back(arg2);
-		std::cout << arg1.first << " -- " << arg1.second << std::endl;
-	}
-	bool execute(std::array<Node *, war_space_len> &arr, Unit & un) override;
-};
-
-//ADD AB Добавить операнд A в содержание местоположение B и сохранить результат в местоположении B.
-class ADD: public Node{
-public:
-	ADD(std::pair<size_t,int> arg1, std::pair<size_t,int> arg2){
-		isCommand = true;
-		args.push_back(arg1);
-		args.push_back(arg2);
-		std::cout << arg1.first << " -- " << arg1.second << std::endl;
-	}
-	bool execute(std::array<Node *, war_space_len> &arr, Unit & un) override;
-};
-
-//SUB AB Вычесть операнд A из содержимого местоположения B и сохранить результат в местоположении B. 
-class SUB: public Node{
-public:
-	SUB(std::pair<size_t,int> arg1, std::pair<size_t,int> arg2){
-		isCommand = true;
-		args.push_back(arg1);
-		args.push_back(arg2);
-		std::cout << arg1.first << " -- " << arg1.second << std::endl;
-	}
-	bool execute(std::array<Node *, war_space_len> &arr, Unit & un) override;
-};
-
-//JMP B Перейти к местоположению B. 
-class JMP: public Node{
-public:
-	JMP(std::pair<size_t,int> arg1){
-		isCommand = true;
-		args.push_back(arg1);
-		std::cout << arg1.first << " -- " << arg1.second << std::endl;
-	}
-	bool execute(std::array<Node *, war_space_len> &arr, Unit & un) override;
-};
-
-/*
-JMZ AB Если операнд A равен 0, перейдите в местоположение B;
-в противном случае продолжить следующую команду.
-*/
-class JMZ: public Node{
-public:
-	JMZ(std::pair<size_t,int> arg1, std::pair<size_t,int> arg2){
-		isCommand = true;
-		args.push_back(arg1);
-		args.push_back(arg2);
-		std::cout << arg1.first << " -- " << arg1.second << std::endl;
-	}
-	bool execute(std::array<Node *, war_space_len> &arr, Unit & un) override;
-};
-
-/*
-DJZ AB Сокращение содержимого местоположения A на 1.
-Если в местоположении A теперь выполняется 0, перейдите в положение B;
-в противном случае продолжить следующую команду.
-*/
-class DJZ: public Node{
-public:
-	DJZ(std::pair<size_t,int> arg1, std::pair<size_t,int> arg2){
-		isCommand = true;
-		args.push_back(arg1);
-		args.push_back(arg2);
-		std::cout << arg1.first << " -- " << arg1.second << std::endl;
-	}
-	bool execute(std::array<Node *, war_space_len> &arr, Unit & un) override;
-};
-
-/*
-CMP AB Сравнить операнд A с операндом B.
-Если они не равны, пропустите следующую инструкцию;
-в противном случае продолжить
-*/
-class CMP: public Node{
-public:
-	CMP(std::pair<size_t,int> arg1, std::pair<size_t,int> arg2){
-		isCommand = true;
-		args.push_back(arg1);
-		args.push_back(arg2);
-		std::cout << arg1.first << " -- " << arg1.second << std::endl;
-	}
-	bool execute(std::array<Node *, war_space_len> &arr, Unit & un) override;
-};
-
-}
-
-#endif
