@@ -3,15 +3,52 @@
 DAT::DAT(std::pair<size_t,int> arg1){
 	isCommand = true;
 	args.push_back(arg1);
-	std::cout << arg1.first << " -- " << arg1.second << std::endl;
+}
+
+MOV::MOV(std::pair<size_t,int> arg1, std::pair<size_t,int> arg2){
+	isCommand = true;
+	args.push_back(arg1);
+	args.push_back(arg2);
+}
+
+ADD::ADD(std::pair<size_t,int> arg1, std::pair<size_t,int> arg2){
+	isCommand = true;
+	args.push_back(arg1);
+	args.push_back(arg2);
+}
+
+SUB::SUB(std::pair<size_t,int> arg1, std::pair<size_t,int> arg2){
+	isCommand = true;
+	args.push_back(arg1);
+	args.push_back(arg2);
+}
+
+JMP::JMP(std::pair<size_t,int> arg1){
+	isCommand = true;
+	args.push_back(arg1);
+}
+
+JMZ::JMZ(std::pair<size_t,int> arg1, std::pair<size_t,int> arg2){
+	isCommand = true;
+	args.push_back(arg1);
+	args.push_back(arg2);
+}
+
+DJZ::DJZ(std::pair<size_t,int> arg1, std::pair<size_t,int> arg2){
+	isCommand = true;
+	args.push_back(arg1);
+	args.push_back(arg2);
+}
+
+CMP::CMP(std::pair<size_t,int> arg1, std::pair<size_t,int> arg2){
+	isCommand = true;
+	args.push_back(arg1);
+	args.push_back(arg2);
 }
 
 bool DAT::execute(std::array<Node *, war_space_len> & arr, Unit & un){
 	canExecute();
 	isCommand = false;
-	std::cout << "DAT executing number = " << get_number_from_args(arr, un, 0) << std::endl;
-	std::cout << "pointer = " << un.unit_pointer << std::endl;
-	std::cout << "arr = " << arr[un.unit_pointer]->args[0].second << std::endl;
 	number = get_number_from_args(arr, un, 0);
 }
 
@@ -89,3 +126,12 @@ Node * DJZ::create(size_t & i, std::vector<string> & words){
 Node * CMP::create(size_t & i, std::vector<string> & words){
 	return new CMP(get_arg(i, words), get_arg(i, words));
 }
+
+bool is_dat_init = Factory<std::string, Node, Node * (*)(size_t &, std::vector<std::string> &)>::getFactory().registerCommand("DAT", DAT::create);
+bool is_mov_init = Factory<std::string, Node, Node * (*)(size_t &, std::vector<std::string> &)>::getFactory().registerCommand("MOV", MOV::create);
+bool is_add_init = Factory<std::string, Node, Node * (*)(size_t &, std::vector<std::string> &)>::getFactory().registerCommand("ADD", ADD::create);
+bool is_sub_init = Factory<std::string, Node, Node * (*)(size_t &, std::vector<std::string> &)>::getFactory().registerCommand("SUB", SUB::create);
+bool is_jmp_init = Factory<std::string, Node, Node * (*)(size_t &, std::vector<std::string> &)>::getFactory().registerCommand("JMP", JMP::create);
+bool is_jmz_init = Factory<std::string, Node, Node * (*)(size_t &, std::vector<std::string> &)>::getFactory().registerCommand("JMZ", JMZ::create);
+bool is_djz_init = Factory<std::string, Node, Node * (*)(size_t &, std::vector<std::string> &)>::getFactory().registerCommand("DJZ", DJZ::create);
+bool is_cmp_init = Factory<std::string, Node, Node * (*)(size_t &, std::vector<std::string> &)>::getFactory().registerCommand("CMP", CMP::create);

@@ -1,23 +1,5 @@
 #include "Core_war.h"
 
-Core_war::Core_war(){
-	for (size_t i = 0; i < war_space_len; ++i){
-		war_space[i] = new Node();
-	}
-}
-
-Core_war::~Core_war(){
-	for (size_t i = 0; i < war_space_len; ++i){
-		delete war_space[i];
-	}
-}
-
-void Core_war::set(Node * node, size_t i){
-	delete war_space[i];
-	war_space[i] = node;
-
-}
-
 bool isdigit_(string &str){
 	int r = 0;
 	if(str[0] == '-') r++;
@@ -30,6 +12,16 @@ bool isdigit_(string &str){
 		}
 	}
 	return true;
+}
+
+void Node::canExecute(){
+	if(!isCommand){
+		throw "выполнение команды которой нет";
+	}
+}
+
+bool Node::execute(std::array<Node *, war_space_len> &arr, Unit & un){
+	canExecute();
 }
 
 std::pair<size_t,int> Node::get_arg(size_t &i, std::vector<string> & words){
@@ -50,49 +42,6 @@ std::pair<size_t,int> Node::get_arg(size_t &i, std::vector<string> & words){
 		std::cout << "error not a digit" << std::endl;
 	}
 	return arg;
-}
-
-bool Core_war::add_unit(string path){
-	Unit un;
-	std::ifstream file(path);
-	if(!file){
-		throw "файл не найден";
-	}
-
-	//разбиваем на слова
-	std::vector<string> words;
-	string tec;
-	while(!file.eof()){
-		file >> tec;
-		words.push_back(tec);
-	}
-	file.close();
-	
-	std::cout << std::endl;
-	for (int i = 0; i < words.size(); ++i){
-		std::cout << " -- " << words[i];
-	}
-	std::cout << std::endl;
-	std::cout << std::endl;
-
-	//ищем место для unit
-	bool found = false;
-
-	while(!found){
-		found = true;
-		std::srand(unsigned(std::time(0)));
-		un.unit_pointer = std::rand() % (war_space_len - max_size_unit);
-		for (size_t i = 0; i < units.size(); ++i){
-			size_t abs = un.unit_pointer - units[i].unit_pointer;
-			if(abs < 0) abs *= -1;
-			if(abs <= max_size_unit) found = false;	
-		}
-	}
-	units.push_back(un);
-
-	for (size_t i = 0; i < words.size(); ++i){
-		set(Factory::getFactory().createCommandByName(words[i], i, words), un.unit_pointer++);
-	}
 }
 
 int Node::get_number_from_args(std::array<Node *, war_space_len> &arr, Unit & un, size_t i){
@@ -122,4 +71,88 @@ int Node::get_addres_from_args(std::array<Node *, war_space_len> &arr, Unit & un
 			std::cout << "обращение за числом к команде 2" << std::endl;
 		}
 	}
+}
+
+Core_war::Core_war(){
+	for (size_t i = 0; i < war_space_len; ++i){
+		war_space[i] = new Node();
+	}
+}
+
+Core_war::~Core_war(){
+	for (size_t i = 0; i < war_space_len; ++i){
+		delete war_space[i];
+	}
+}
+
+void Core_war::set(Node * node, size_t i){
+	delete war_space[i];
+	war_space[i] = node;
+
+}
+
+bool Core_war::add_unit(string path){
+	Unit un;
+	std::ifstream file(path);
+	if(!file){
+		throw "файл не найден";
+	}
+
+	std::vector<string> words;
+	string tec;
+	while(!file.eof()){
+		file >> tec;
+		words.push_back(tec);
+	}
+	file.close();
+
+	bool found = false;
+
+	while(!found){
+		found = true;
+		std::srand(unsigned(std::time(0)));
+		un.unit_pointer = std::rand() % (war_space_len - max_size_unit);
+		for (size_t i = 0; i < units.size(); ++i){
+			size_t abs = un.unit_pointer - units[i].unit_pointer;
+			if(abs < 0) abs *= -1;
+			if(abs <= max_size_unit) found = false;	
+		}
+	}
+	units.push_back(un);
+
+	for (size_t i = 0; i < words.size(); ++i){
+		set(Factory<std::string, Node, Node * (*)(size_t &, std::vector<std::string> &)>::getFactory().createCommandByName(words[i], i, words), un.unit_pointer++);
+	}
+}
+
+void Core_war::draw(){
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	system("clear");
+	for (size_t i = 0; i < space_height; ++i){
+		for (size_t j = 0; j < space_width; ++j){
+			if(war_space[j + (i * space_height)]->isCommand){
+				std::cout << "f ";
+			} else
+			if(war_space[j + (i * space_height)]->number > 0){
+				std::cout << war_space[j + (i * space_height)]->number % 10 << " ";
+			} else{
+				std::cout << "  ";
+			}
+		}
+		std::cout << std::endl;
+	}
+}
+
+int Core_war::start(int n){
+	for (int i = 0; i < n; ++i){
+		try{
+			draw();
+			war_space[units[i % units.size()].unit_pointer]->execute(war_space, units[i % units.size()]);
+			units[i % units.size()].unit_pointer = (units[i % units.size()].unit_pointer + 1) % war_space_len;
+		}catch(const char * str){
+			std::cout << str << std::endl;
+			return i % units.size();
+		}
+	}
+	return -1;
 }

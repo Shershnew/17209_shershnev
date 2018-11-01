@@ -7,11 +7,11 @@
 #include <ctime>
 #include <chrono>
 #include <thread>
-
-class Node;
-typedef std::string string;
+#include <string>
 
 #include "Factory_commands.h"
+
+typedef std::string string;
 
 const size_t space_width = 20;
 const size_t space_height = 20;
@@ -35,35 +35,13 @@ public:
 	std::vector<std::pair<size_t,int>> args;
 	Node() : isCommand(false), number(0){}
 	virtual ~Node(){}
-	void canExecute(){
-		if(!isCommand){
-			throw "выполнение команды которой нет";
-		}
-	}
-	virtual bool execute(std::array<Node *, war_space_len> &arr, Unit & un){
-		canExecute();
-	}
+	void canExecute();
+	virtual bool execute(std::array<Node *, war_space_len> &arr, Unit & un);
 };
 
 class Core_war{
 private:
-	void draw(){
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		system("clear");
-		for (size_t i = 0; i < space_height; ++i){
-			for (size_t j = 0; j < space_width; ++j){
-				if(war_space[j + (i * space_height)]->isCommand){
-					std::cout << "f ";
-				} else
-				if(war_space[j + (i * space_height)]->number > 0){
-					std::cout << war_space[j + (i * space_height)]->number;
-				} else{
-					std::cout << "  ";
-				}
-			}
-			std::cout << std::endl;
-		}
-	}
+	void draw();
 	void set(Node * node, size_t i);
 public:
 	std::vector<Unit> units;
@@ -71,17 +49,5 @@ public:
 	Core_war();
 	~Core_war();
 	bool add_unit(string path);
-	int start(int n){
-		for (int i = 0; i < n; ++i){
-			try{
-				draw();
-				war_space[units[i % units.size()].unit_pointer]->execute(war_space, units[i % units.size()]);
-				units[i % units.size()].unit_pointer = (units[i % units.size()].unit_pointer + 1) % war_space_len;
-			}catch(const char * str){
-				std::cout << str << std::endl;
-				return i % units.size();
-			}
-		}
-		return -1;
-	}
+	int start(int n);
 };
