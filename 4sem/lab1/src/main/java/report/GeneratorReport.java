@@ -2,12 +2,11 @@ package report;
 
 import service.TextStatistics;
 import service.WordStat;
-
-import java.util.Iterator;
 import java.util.TreeSet;
 
-public class GeneratorReport implements Iterable<WordStat> {
+public class GeneratorReport {
 	private final TreeSet<WordStat> treeSet;
+    private int countWords;
 
 	public GeneratorReport(TextStatistics textStatistics) {
 		treeSet = new TreeSet<>((ws1, ws2) -> {
@@ -21,19 +20,17 @@ public class GeneratorReport implements Iterable<WordStat> {
 		for (WordStat wordStat : textStatistics) {
 			treeSet.add(wordStat);
 		}
+
+		countWords = textStatistics.getCountWords();
 	}
 
-	public static ReportRow generateRow(WordStat wordStat, int count) {
-		double frequency = (double)wordStat.getCount() / count;
-		if (!Double.isFinite(frequency)) {
-			frequency = -0.0;
-		}
-
-		return new ReportRow(wordStat.getWord(),Integer.toString(wordStat.getCount()),String.format("%.4f",frequency));
+	public ReportRow generateRow(WordStat wordStat) {
+		double frequency = (double)wordStat.getCount() / countWords;
+		return new ReportRow(wordStat.getWord(), Integer.toString(wordStat.getCount()), String.format("%.4f",frequency));
 	}
 
-	@Override
-	public Iterator<WordStat> iterator() {
-		return treeSet.iterator();
+	public TreeSet<WordStat> getWordStats(){
+		return treeSet;
 	}
+
 }

@@ -3,20 +3,27 @@ package service;
 import writers.OutputStreamWriterCSV;
 import report.GeneratorReport;
 import report.ReportRow;
-import report.StaticsReport;
+import report.StatisticsReport;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class Controller {
 	private final TextStatistics textStatistics;
 
-	public Controller() {
+	public Controller(InputStream inputStream, OutputStream outputStream) {
 		textStatistics = new TextStatistics();
+		readData(inputStream);
+		try {
+			writeCSVReport(outputStream);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
-	public void getData(Scanner scanner){
+	private void readData(InputStream inputStream){
+		Scanner scanner = new Scanner(inputStream);
 		try {
 			while (true) {
 				String word = scanner.next();
@@ -29,20 +36,20 @@ public class Controller {
 		}
 	}
 
-	public void writeCSVReport(OutputStreamWriterCSV writerCSV) throws IOException {
+	private void writeCSVReport(OutputStream outputStream) throws IOException {
 		GeneratorReport generator = new GeneratorReport(textStatistics);
 
-		StaticsReport report = new StaticsReport();
+		StatisticsReport report = new StatisticsReport();
 
-		for (WordStat wordStat : generator) {
-			ReportRow row = GeneratorReport.generateRow(wordStat, textStatistics.getCountWords());
-			report.addReportRow(row);
+		for (WordStat wordStat : generator.getWordStats()) {
+			report.addReportRow(generator.generateRow(wordStat));
 		}
 
-		for (ReportRow row : report) {
-			writerCSV.writeRow(row);
-		}
+		OutputStreamWriterCSV writerCSV = new OutputStreamWriterCSV(outputStream);
 
-		writerCSV.flush();
+		for (ReportRow row : report.getReportRows()){
+			writerCSV.writeRow(row.getElements());
+		}
+		writerCSV.close();
 	}
 }

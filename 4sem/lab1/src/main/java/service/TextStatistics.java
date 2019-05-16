@@ -17,7 +17,7 @@ public class  TextStatistics implements Iterable<WordStat> {
 		wordStat.increase();
 	}
 
-	int getCountWords() {
+	public int getCountWords() {
 		return wordCounter;
 	}
 

@@ -1,10 +1,10 @@
 package report;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 public class ReportRow {
-	private final List<String> elements;
+	private final Collection<String> elements;
 
 	ReportRow(String ... args) {
 		elements = new ArrayList<>();
@@ -13,7 +13,7 @@ public class ReportRow {
 		}
 	}
 
-	public List<String> getElements() {
+	public Collection<String> getElements() {
 		return elements;
 	}
 }
